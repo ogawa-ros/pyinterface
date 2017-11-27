@@ -14,7 +14,7 @@
 
     import pyinterface
     
-    board_name = 2704
+    board_name = 2724
     rsw_id = 2
     
     b = pyinterface.open(board_name, rsw_id)
