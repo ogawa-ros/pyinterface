@@ -1,4 +1,97 @@
 
+"""
+PCI/CPZ-2724 DIO ボードのドライバです。概ね公式ドライバ GPG-2000 に対応する機能を提供します。
+
+
+メソッド一覧
+----------
+
+.. list-table:: 
+  :header-rows: 1
+
+  * - メソッド
+    - 公式ドライバの対応する関数
+    - 機能
+  
+  * - `initialize() <#pyinterface.pci2724.pci2724_driver.initialize>`_
+    - DioOpen
+    - ボードを初期化します
+
+  * - `input_point(start, num) <#pyinterface.pci2724.pci2724_driver.input_point>`_
+    - DioInputPoint
+    - デジタル入力を任意点数取得します
+
+  * - `input_byte(range_) <#pyinterface.pci2724.pci2724_driver.input_byte>`_
+    - DioInputByte
+    - デジタル入力を1byte単位で取得します
+
+  * - `input_word(range_) <#pyinterface.pci2724.pci2724_driver.input_word>`_
+    - DioInputWord
+    - デジタル入力を2byte単位で取得します
+
+  * - `input_dword() <#pyinterface.pci2724.pci2724_driver.input_dword>`_
+    - DioInputDword
+    - デジタル入力を4byte単位で取得します
+
+  * - `output_point(data, start) <#pyinterface.pci2724.pci2724_driver.output_point>`_
+    - DioOutputPoint
+    - デジタル出力を任意点数設定します
+
+  * - `output_byte(range_) <#pyinterface.pci2724.pci2724_driver.output_byte>`_
+    - DioOutputByte
+    - デジタル出力を1byte単位で設定します
+
+  * - `output_word(range_) <#pyinterface.pci2724.pci2724_driver.output_word>`_
+    - DioOutputWord
+    - デジタル出力を2byte単位で設定します
+
+  * - `output_dword() <#pyinterface.pci2724.pci2724_driver.output_dword>`_
+    - DioOutputDword
+    - デジタル出力を4byte単位で設定します
+ 
+  * - `set_latch_status(enable) <#pyinterface.pci2724.pci2724_driver.set_latch_status>`_
+    - DioSetLatchStatus
+    - ラッチ回路の接続を設定します
+
+  * - `get_latch_status() <#pyinterface.pci2724.pci2724_driver.get_latch_status>`_
+    - DioGetLatchStatus
+    - ラッチ回路の接続状態を取得します
+
+  * - `get_ack_status() <#pyinterface.pci2724.pci2724_driver.get_ack_status>`_
+    - DioGetAckStatus
+    - ACK2, STB2 端子の接続状態を取得します
+
+  * - `set_ack_pulse_command(ack, pulse) <#pyinterface.pci2724.pci2724_driver.set_ack_pulse_command>`_
+    - DioSetAckPulseCommand
+    - ACK1, PULS.OUT1 の出力制御を設定します
+
+  * - `get_stb_status() <#pyinterface.pci2724.pci2724_driver.get_stb_status>`_
+    - DioGetStbStatus
+    - STB1, ACK1 端子の接続状態を取得します
+
+  * - `set_stb_pulse_command(stb, pulse) <#pyinterface.pci2724.pci2724_driver.set_stb_pulse_command>`_
+    - DioSetStbPulseCommand
+    - STB2, PULS.OUT2 の出力制御を設定します
+
+
+I/O ポート
+---------
+
+.. list-table:: 
+  :header-rows: 1
+
+  * - ポート名
+    - 説明
+
+  * - `pci2724_in <#pyinterface.pci2724.pci2724_in>`_
+    - PCI2724 I/O 入力ポート (16bytes)
+
+  * - `pci2724_out <#pyinterface.pci2724.pci2724_out>`_
+    - PCI2724 I/O 出力ポート (16bytes)
+  
+
+"""
+
 from .core import interface_driver
 from .core import Bytes
 
@@ -104,6 +197,19 @@ class pci2724_driver(interface_driver):
         return self._set_register(0x00, outp, 4)
     
     def initialize(self):
+        """ボードを初期化します
+        
+        Notes
+        -----
+        - 以下の処理を実行します:
+        
+            - デジタル出力の解除
+            - ラッチ出力の解除
+        
+        - DioOpen 関数に概ね対応しますが、pyinterface には open の概念がありませんので
+          initialize() を実行しなくともドライバへアクセス可能です。
+        - initialize() を実行しない場合、直前のボード状況が反映されています。
+        """
         self.bytes_in[0].set(0)
         self.bytes_out[0].set(0)
         self.output_dword([0]*32)
@@ -111,8 +217,30 @@ class pci2724_driver(interface_driver):
         return
 
     def input_point(self, start, num):
-        """
-        Compatibility: DioInputPoint function in GPG-2000 driver
+        """デジタル入力を任意点数取得します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioInputPoint関数に対応します
+        
+        Parameters
+        ----------
+        start : int
+            取得する最初のチャンネルを指定します (範囲: 1 -- 32)
+        num : int
+            取得する個数を指定します (`start` + `num` が 33 を超えてはいけません) 
+        
+        Returns
+        -------
+        list
+            指定したチャンネルのデジタル入力状況のリスト
+        
+        Examples
+        --------
+        IN2 - IN6 のデジタル入力状況を取得します
+        
+        >>> pci2724.input_point(2, 5)
+        [1, 0, 1, 0, 1]
         """
         self._verify_io_number_access(start, num)
         inp = self._get_input()
@@ -120,47 +248,167 @@ class pci2724_driver(interface_driver):
         bits = list(map(int, bits_str[start-1:start+num-1]))
         return bits
 
-    def output_point(self, data, start_num):
-        """
-        Compatibility: DioOutputPoint function in GPG-2000 driver
+    def output_point(self, data, start):
+        """デジタル出力を任意点数設定します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioOutputPoint関数に対応します
+        
+        Parameters
+        ----------
+        data : list
+            設定するデジタル出力状況のリストです (1:ON, 0:OFF)
+        start : int
+            設定する最初のチャンネルを指定します (範囲: 1 -- 32)
+        
+        Returns
+        -------
+        pyinterface.core.Bytes
+            デジタル出力状況
+        
+        Examples
+        --------
+        OUT3 より 4 チャンネルのデジタル出力を ON にします
+        
+        >>> pci2724.output_point([1,1,1,1], 3)
+        3C000000
         """
         return self._set_output(data, start_num)
 
-    def input_byte(self, num):
-        """
-        Compatibility: DioInputByte function in GPG-2000 driver
-        """
-        if isinstance(num, str):
-            if num.find('IN1_8') != -1: num = 1
-            elif num.find('IN9_16') != -1: num = 9
-            elif num.find('IN17_24') != -1: num = 17
-            elif num.find('IN25_32') != -1: num = 25
-            else: return
+    def input_byte(self, range_):
+        """デジタル入力を1byte単位で取得します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioInputByte関数に対応します
+        
+        Parameters
+        ----------
+        range_ : str
+            デジタル入力状況を取得する範囲を指定します
             
-        self._verify_io_number_access(num, 8)
+            .. list-table:: 
+                :header-rows: 1
+        
+                * - `range_`
+                  - 取得するチャンネル
+  
+                * - 'IN1_8' 
+                  - IN1 から IN8 まで
+        
+                * - 'IN9_16' 
+                  - IN9 から IN16 まで
+        
+                * - 'IN17_24' 
+                  - IN17 から IN24 まで
+        
+                * - 'IN25_32' 
+                  - IN25 から IN32 まで
+        
+        Returns
+        -------
+        list
+            指定したチャンネルのデジタル入力状況のリスト (length=8)
+        
+        Examples
+        --------
+        IN9 - IN16 のデジタル入力状況を取得します
+        
+        >>> pci2724.input_byte('IN9_16')
+        [1, 1, 0, 0, 1, 0, 1, 0]
+        """
+        if isinstance(range_, str):
+            if range_.find('IN1_8') != -1: start = 1
+            elif range_.find('IN9_16') != -1: start = 9
+            elif range_.find('IN17_24') != -1: start = 17
+            elif range_.find('IN25_32') != -1: start = 25
+            else: return
+        
+        if isinstance(range_, int):
+            start = range_
+            pass
+        
+        num = 8
+            
+        self._verify_io_number_access(start, num)
         inp = self._get_input()
         bits_str = inp.ordered_bit()
-        bits = list(map(int, bits_str[num-1:num+8-1]))
+        bits = list(map(int, bits_str[start-1:start+num-1]))
         return bits
     
-    def input_word(self, num):
-        """
-        Compatibility: DioInputWord function in GPG-2000 driver
-        """
-        if isinstance(num, str):
-            if num.find('IN1_16') != -1: num = 1
-            elif num.find('IN17_32') != -1: num = 17
-            else: return
+    def input_word(self, range_):
+        """デジタル入力を2byte単位で取得します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioInputWord関数に対応します
+        
+        Parameters
+        ----------
+        range_ : str
+            デジタル入力状況を取得する範囲を指定します
             
-        self._verify_io_number_access(num, 16)
+            .. list-table:: 
+                :header-rows: 1
+        
+                * - `range`
+                  - 取得するチャンネル
+  
+                * - 'IN1_16' 
+                  - IN1 から IN16 まで
+        
+                * - 'IN17_32' 
+                  - IN17 から IN32 まで
+        
+        Returns
+        -------
+        list
+            指定したチャンネルのデジタル入力状況のリスト (length=16)
+        
+        Examples
+        --------
+        IN1 - IN16 のデジタル入力状況を取得します
+        
+        >>> pci2724.input_word('IN1_16')
+        [1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0]
+        """
+        if isinstance(range_, str):
+            if range_.find('IN1_16') != -1: start = 1
+            elif range_.find('IN17_32') != -1: start = 17
+            else: return
+        
+        if isinstance(range_, int):
+            start = range_
+            pass
+            
+        num = 16
+            
+        self._verify_io_number_access(start, num)
         inp = self._get_input()
         bits_str = inp.ordered_bit()
-        bits = list(map(int, bits_str[num-1:num+16-1]))
+        bits = list(map(int, bits_str[start-1:start+num-1]))
         return bits
 
     def input_dword(self):
-        """
-        Compatibility: DioInputDword function in GPG-2000 driver
+        """デジタル入力を4byte取得します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioInputDword関数に対応します
+        
+        Returns
+        -------
+        list
+            デジタル入力状況のリスト (length=32)
+        
+        Examples
+        --------
+        IN1 - IN32 のデジタル入力状況を取得します
+        
+        >>> pci2724.input_dword()
+        [1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0,
+         1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0]
         """
         self._verify_io_number_access(1, 32)
         inp = self._get_input()
@@ -168,43 +416,138 @@ class pci2724_driver(interface_driver):
         bits = list(map(int, bits_str[0:32]))
         return bits
 
-    def output_byte(self, data, num):
-        """
-        Compatibility: DioOutputByte function in GPG-2000 driver
+    def output_byte(self, data, range_):
+        """デジタル出力を1byte単位で設定します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioOutputByte関数に対応します
+        
+        Parameters
+        ----------
+        data : list
+            設定するデジタル出力状況のリストです (1:ON, 0:OFF)。length は 8 にしてください。
+        range_ : str
+            デジタル出力状況を設定する範囲を指定します
+            
+            .. list-table:: 
+                :header-rows: 1
+        
+                * - `range_`
+                  - 設定するチャンネル
+  
+                * - 'OUT1_8' 
+                  - OUT1 から OUT8 まで
+        
+                * - 'OUT9_16' 
+                  - OUT9 から OUT16 まで
+        
+                * - 'OUT17_24' 
+                  - OUT17 から OUT24 まで
+        
+                * - 'OUT25_32' 
+                  - OUT25 から OUT32 まで
+        
+        Returns
+        -------
+        pyinterface.core.Bytes
+            デジタル出力状況
+        
+        Examples
+        --------
+        OUT1 より 1 byte 分のチャンネルのデジタル出力を設定します
+        
+        >>> pci2724.output_byte([1,0,1,0,1,0,1,0], 'OUT1_8')
+        55000000
         """
         if len(data) != 8:
             msg = 'data length should be 8'
             msg += ' while {0} length list is given.'.format(len(data))
             raise InvalidListLengthError(msg)
         
-        if isinstance(num, str):
-            if num.find('OUT1_8') != -1: num = 1
-            elif num.find('OUT9_16') != -1: num = 9
-            elif num.find('OUT17_24') != -1: num = 17
-            elif num.find('OUT25_32') != -1: num = 25
+        if isinstance(range_, str):
+            if range_.find('OUT1_8') != -1: range_ = 1
+            elif range_.find('OUT9_16') != -1: range_ = 9
+            elif range_.find('OUT17_24') != -1: range_ = 17
+            elif range_.find('OUT25_32') != -1: range_ = 25
             else: return
             
-        return self._set_output(data, num)
+        return self._set_output(data, range_)
 
-    def output_word(self, data, num):
-        """
-        Compatibility: DioOutputWord function in GPG-2000 driver
+    def output_word(self, data, range_):
+        """デジタル出力を2byte単位で設定します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioOutputWord関数に対応します
+        
+        Parameters
+        ----------
+        data : list
+            設定するデジタル出力状況のリストです (1:ON, 0:OFF)。length は 16 にしてください。
+        range_ : str
+            デジタル出力状況を設定する範囲を指定します
+            
+            .. list-table:: 
+                :header-rows: 1
+        
+                * - `range_`
+                  - 設定するチャンネル
+  
+                * - 'OUT1_16'
+                  - OUT1 から OUT16 まで
+        
+                * - 'OUT17_32'
+                  - OUT17 から OUT32 まで
+        
+        Returns
+        -------
+        pyinterface.core.Bytes
+            デジタル出力状況
+        
+        Examples
+        --------
+        OUT17 より 2 byte 分のチャンネルのデジタル出力を設定します
+        
+        >>> pci2724.output_word([1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0], 'OUT17_32')
+        0000550F
         """
         if len(data) != 16:
             msg = 'data length should be 16'
             msg += ' while {0} length list is given.'.format(len(data))
             raise InvalidListLengthError(msg)
         
-        if isinstance(num, str):
-            if num.find('OUT1_16') != -1: num = 1
-            elif num.find('OUT17_32') != -1: num = 17
+        if isinstance(range_, str):
+            if range_.find('OUT1_16') != -1: range_ = 1
+            elif range_.find('OUT17_32') != -1: range_ = 17
             else: return
             
-        return self._set_output(data, num)
+        return self._set_output(data, range_)
 
     def output_dword(self, data):
-        """
-        Compatibility: DioOutputDword function in GPG-2000 driver
+        """デジタル出力を4byte設定します
+        
+        Notes
+        -----
+        GPG-2000ドライバのDioOutputDword関数に対応します
+        
+        Parameters
+        ----------
+        data : list
+            設定するデジタル出力状況のリストです (1:ON, 0:OFF)。length は 32 にしてください。
+        
+        Returns
+        -------
+        pyinterface.core.Bytes
+            デジタル出力状況
+        
+        Examples
+        --------
+        OUT1 より 4byte 分のチャンネルのデジタル出力を設定します
+        
+        >>> d = [1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0,1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0]
+        >>> pci2724.output_dword(d)
+        550F550F
         """
         if len(data) != 32:
             msg = 'data length should be 32'
@@ -214,83 +557,174 @@ class pci2724_driver(interface_driver):
         return self._set_output(data, 1)
     
     def set_latch_status(self, enable=''):
-        """
+        """ラッチ回路の接続を設定します
+        
+        Notes
+        -----
         Compatibility: DioSetLatchStatus function in GPG-2000 driver
         
         Parameters
         ----------
-        enable : str ('PORT0', 'PORT1', 'PORT2' and/or 'PORT3')
-            'PORT0' = IN1 - IN8
-            'PORT1' = IN9 - IN16
-            'PORT2' = IN17 - IN24
-            'PORT3' = IN25 - IN32
+        enable : str
+            ラッチ回路接続を有効にするポートを指定します。
+            複数指定する場合、スペースで区切って指定してください。
+            指定されなかったポートは、ラッチ回路接続 "無効" になります。
+        
+            .. list-table:: 
+                :header-rows: 1
+                
+                * - `enable`
+                  - 有効にするチャンネル
+                
+                * - 'PORT0'
+                  - IN1 - IN8
+            
+                * - 'PORT1'
+                  - IN9 - IN16
+            
+                * - 'PORT2'
+                  - IN17 - IN24 
+        
+                * - 'PORT3'
+                  - IN25 - IN32
         
         Examples
         --------
-        b.set_latch_status('PORT0 PORT3')
+        pci2724.set_latch_status('PORT0 PORT3')
         """
         addr = 0x0b
         flags = enable
         return self._set_register(addr, flags)
     
     def get_latch_status(self):
-        """
+        """ラッチ回路の接続を取得します
+        
+        Notes
+        -----
         Compatibility: DioGetLatchStatus function in GPG-2000 driver
         """
         addr = 0x0b
         return self._get_register(addr)
     
     def get_ack_status(self):
-        """
+        """ACK2, STB2 端子の接続状態を取得します
+
+        Notes
+        -----
         Compatibility: DioGetAckStatus function in GPG-2000 driver
         """
         addr = 0x08
         return self._get_register(addr)
     
     def set_ack_pulse_command(self, ack='', pulse=''):
-        """
+        """ACK1, PULS.OUT1 の出力制御を設定します
+
+        Notes
+        -----
         Compatibility : DioSetAckPulseCommand function in GPG-2000 driver
         
         Parameters
         ----------
-        ack : str ('ACK10' or 'ACK11')
-            ''      = do nothing
-            'ACK10' = clear ACK1 terminal (Low -> High)
-            'ACK11' = set ACK1 terminal (High -> Low)
+        ack : str 
+            ACK 出力制御
         
-        pulse : str ('PO10', 'PO11' or 'PO12')
-            ''     = do nothing
-            'PO10' = set PULS.OUT1 terminal High
-            'PO11' = set PULS.OUT1 terminal Low
-            'PO12' = output Low pulse from PULS.OUT1 terminal
+            .. list-table:: 
+                :header-rows: 1
+         
+                * - `ack`
+                  - 動作
+        
+                * - ''
+                  - 何もしません
+        
+                * - 'ACK10'
+                  - clear ACK1 terminal (Low -> High)
+        
+                * - 'ACK11'
+                  - set ACK1 terminal (High -> Low)
+        
+        pulse : str
+            PULSE.OUT1 出力制御
+        
+            .. list-table:: 
+                :header-rows: 1
+         
+                * - `pulse`
+                  - 動作
+        
+                * - ''
+                  - 何もしません
+        
+                * - 'PO10'
+                  - set PULS.OUT1 terminal High
+        
+                * - 'PO11'
+                  - set PULS.OUT1 terminal Low
+        
+                * - 'PO12'
+                  - output Low pulse from PULS.OUT1 terminal
         """
         addr = 0x08
         flags = ack + ' ' + pulse
         return self._set_register(addr, flags)
     
     def get_stb_status(self):
-        """
+        """STB1, ACK1 端子の接続状態を取得します
+        
+        Notes
+        -----
         Compatibility: DioGetStbStatus function in GPG-2000 driver
         """
         addr = 0x09
         return self._get_register(addr)
         
     def set_stb_pulse_command(self, stb='', pulse=''):
-        """
+        """STB2, PULS.OUT2 の出力制御を設定します
+        
+        Notes
+        -----
         Compatibility : DioSetStbPulseCommand function in GPG-2000 driver
         
         Parameters
         ----------
-        stb : str ('STB20' or 'STB21')
-            ''      = do nothing
-            'STB20' = clear STB2 terminal (Low -> High)
-            'STB21' = set STB2 terminal (High -> Low)
+        stb : str
+            STB 出力制御
         
-        pulse : str ('PO20', 'PO21' or 'PO22')
-            ''     = do nothing
-            'PO20' = set PULS.OUT2 terminal High
-            'PO21' = set PULS.OUT2 terminal Low
-            'PO22' = output Low pulse from PULS.OUT2 terminal
+            .. list-table:: 
+                :header-rows: 1
+         
+                * - `stb`
+                  - 動作
+        
+                * - ''
+                  - 何もしません
+        
+                * - 'STB20'
+                  - clear STB2 terminal (Low -> High)
+
+                * - 'STB21'
+                  - set STB2 terminal (High -> Low)
+        
+        pulse : str
+            PULSE.OUT2 出力制御
+        
+            .. list-table:: 
+                :header-rows: 1
+         
+                * - `pulse`
+                  - 動作
+        
+                * - ''
+                  - 何もしません
+        
+                * - 'PO20'
+                  - set PULS.OUT2 terminal High
+        
+                * - 'PO21'
+                  - set PULS.OUT2 terminal Low
+
+                * - 'PO22'
+                  - output Low pulse from PULS.OUT2 terminal
         """
         addr = 0x09
         flags = stb + ' ' + pulse
