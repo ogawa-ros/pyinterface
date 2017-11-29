@@ -24,3 +24,7 @@
     b.output_byte([0, 1, 0, 1, 0, 0, 1, 1], 'OUT25_32')
     >>> 000000CA
 
+
+## Documents
+
+http://pyinterface.readthedocs.io/ja/latest/index.html
