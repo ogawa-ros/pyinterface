@@ -76,9 +76,7 @@ PCI/CPZ-2724 DIO ボードのドライバです。概ね公式ドライバ GPG-2
 """
 
 import struct
-
 from . import core
-
 
 class InvalidIoNumberError(Exception):
     def __init__(self, message):
@@ -142,8 +140,8 @@ class pci2724_driver(core.interface_driver):
         size = 1
         
         ret = self.read(bar, offset, size)
-        self.bid = ret.to_hex()[1]
-        return self.bid
+        bid = ret.to_hex()[1]
+        return bid
     
     
     def initialize(self):
