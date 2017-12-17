@@ -73,27 +73,11 @@ PCI/CPZ-2724 DIO ボードのドライバです。概ね公式ドライバ GPG-2
     - DioSetStbPulseCommand
     - STB2, PULS.OUT2 の出力制御を設定します
 
-
-I/O ポート
----------
-
-.. list-table:: 
-  :header-rows: 1
-
-  * - ポート名
-    - 説明
-
-  * - `pci2724_in <#pyinterface.pci2724.pci2724_in>`_
-    - PCI2724 I/O 入力ポート (16bytes)
-
-  * - `pci2724_out <#pyinterface.pci2724.pci2724_out>`_
-    - PCI2724 I/O 出力ポート (16bytes)
-  
-
 """
 
-from .core import interface_driver
-from .core import Bytes
+import struct
+
+from . import core
 
 
 class InvalidIoNumberError(Exception):
@@ -107,94 +91,60 @@ class InvalidListLengthError(Exception):
         pass
 
     
-class pci2724_in(Bytes):
-    data = [
-        {'name': ['IN1', 'IN2', 'IN3', 'IN4', 'IN5', 'IN6', 'IN7', 'IN8']},
-        {'name': ['IN9', 'IN10', 'IN11', 'IN12', 'IN13', 'IN14', 'IN15', 'IN16']},
-        {'name': ['IN17', 'IN18', 'IN19', 'IN20', 'IN21', 'IN22', 'IN23', 'IN24']},
-        {'name': ['IN25', 'IN26', 'IN27', 'IN28', 'IN29', 'IN30', 'IN31', 'IN32']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['IRIN2', '', '', '', '', 'STB2', 'ACKR2', 'ACK2']},
-        {'name': ['IRIN1', '', '', '', 'LF', 'ACK1', 'STBR1', 'STB1']},
-        {'name': ['TD1', 'TD2', 'TD3', 'TD4', '', '', '', '']},
-        {'name': ['PORT0', 'PORT1', 'PORT2', 'PORT3', '', '', '', '']},
-        {'name': ['SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', 'SIGRR', '']},
-        {'name': ['SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', '', '']},
-        {'name': ['SIG1', 'SIG2', 'SIG3', 'SIG4', 'EDS1', 'EDS2', 'EDS3', 'EDS4']},
-        {'name': ['BID0', 'BID1', 'BID2', 'BID3', '', '', '', '']},
-    ]
-        
-class pci2724_out(Bytes):
-    data = [
-        {'name': ['OUT1', 'OUT2', 'OUT3', 'OUT4', 'OUT5', 'OUT6', 'OUT7', 'OUT8']},
-        {'name': ['OUT9', 'OUT10', 'OUT11', 'OUT12', 'OUT13', 'OUT14', 'OUT15', 'OUT16']},
-        {'name': ['OUT17', 'OUT18', 'OUT19', 'OUT20', 'OUT21', 'OUT22', 'OUT23', 'OUT24']},
-        {'name': ['OUT25', 'OUT26', 'OUT27', 'OUT28', 'OUT29', 'OUT30', 'OUT31', 'OUT32']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['', '', '', '', '', '', '', '']},
-        {'name': ['', '', '', 'PO10', 'PO11', 'PO12', 'ACK10', 'ACK11']},
-        {'name': ['', '', '', 'PO20', 'PO21', 'PO22', 'STB20', 'STB21']},
-        {'name': ['TCTRL1', 'TCTRL2', 'TCTRL3', 'TCTRL4', 'SCK1', 'SCK2', 'SCK3', '']},
-        {'name': ['PORT0', 'PORT1', 'PORT2', 'PORT3', '', '', '', '']},
-        {'name': ['SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', '', '']},
-        {'name': ['SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', '', '']},
-        {'name': ['SIG1', 'SIG2', 'SIG3', 'SIG4', 'EDS1', 'EDS2', 'EDS3', 'EDS4']},
-        {'name': ['', '', '', '', '', '', '', '']},
-    ]
-
+class pci2724_driver(core.interface_driver):
+    bit_flags_in = (
+        (
+            ('IN1', 'IN2', 'IN3', 'IN4', 'IN5', 'IN6', 'IN7', 'IN8'),
+            ('IN9', 'IN10', 'IN11', 'IN12', 'IN13', 'IN14', 'IN15', 'IN16'),
+            ('IN17', 'IN18', 'IN19', 'IN20', 'IN21', 'IN22', 'IN23', 'IN24'),
+            ('IN25', 'IN26', 'IN27', 'IN28', 'IN29', 'IN30', 'IN31', 'IN32'),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('IRIN2', '', '', '', '', 'STB2', 'ACKR2', 'ACK2'),
+            ('IRIN1', '', '', '', 'LF', 'ACK1', 'STBR1', 'STB1'),
+            ('TD1', 'TD2', 'TD3', 'TD4', '', '', '', ''),
+            ('PORT0', 'PORT1', 'PORT2', 'PORT3', '', '', '', ''),
+            ('SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', 'SIGRR', ''),
+            ('SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', '', ''),
+            ('SIG1', 'SIG2', 'SIG3', 'SIG4', 'EDS1', 'EDS2', 'EDS3', 'EDS4'),
+            ('BID0', 'BID1', 'BID2', 'BID3', '', '', '', ''),
+        ),
+    )
     
-class pci2724_driver(interface_driver):
+    bit_flags_out = (
+        (
+            ('OUT1', 'OUT2', 'OUT3', 'OUT4', 'OUT5', 'OUT6', 'OUT7', 'OUT8'),
+            ('OUT9', 'OUT10', 'OUT11', 'OUT12', 'OUT13', 'OUT14', 'OUT15', 'OUT16'),
+            ('OUT17', 'OUT18', 'OUT19', 'OUT20', 'OUT21', 'OUT22', 'OUT23', 'OUT24'),
+            ('OUT25', 'OUT26', 'OUT27', 'OUT28', 'OUT29', 'OUT30', 'OUT31', 'OUT32'),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', '', '', '', '', ''),
+            ('', '', '', 'PO10', 'PO11', 'PO12', 'ACK10', 'ACK11'),
+            ('', '', '', 'PO20', 'PO21', 'PO22', 'STB20', 'STB21'),
+            ('TCTRL1', 'TCTRL2', 'TCTRL3', 'TCTRL4', 'SCK1', 'SCK2', 'SCK3', ''),
+            ('PORT0', 'PORT1', 'PORT2', 'PORT3', '', '', '', ''),
+            ('SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', '', ''),
+            ('SIG1', 'SIG2', 'SIG3', 'SIG4', 'SIGT', 'SIGR', '', ''),
+            ('SIG1', 'SIG2', 'SIG3', 'SIG4', 'EDS1', 'EDS2', 'EDS3', 'EDS4'),
+            ('', '', '', '', '', '', '', ''),
+        ),
+    )
+    
     io_number = 32
     
-    def __init__(self, config):
-        self.bytes_in = [pci2724_in(addr=config.port[0].addr)]
-        self.bytes_out = [pci2724_out(addr=config.port[0].addr)]
-        super().__init__(config)
-        pass
-
-    def _get_board_id(self):
-        return self.read(self.bytes_in[0][0x0f])
-    
-    def _get_register(self, addr, size=1):
-        target = self.bytes_in[0][addr:addr+size]
-        return self.read(target)
-    
-    def _set_register(self, addr, data, size=1):
-        target = self.bytes_out[0][addr:addr+size]
-        target.set(data)
-        return self.write(target)
-
-    def _get_out_chache(self, addr, size=1):
-        return self.bytes_out[0][addr:addr+size]
-
-    def _verify_io_number_access(self, start, num):
-        if (start < 1) or (start+num > self.io_number+1):
-            msg = 'I/O number should be 1-{0}'.format(self.io_number)
-            msg += ' while {0}-{1} is given.'.format(start, start+num-1)
-            raise InvalidIoNumberError(msg)
-        return
-    
-    def _get_input(self):
-        return self._get_register(0x00, 4)
-    
-    def _set_output(self, data, start):
-        num = len(data)
-        start_ = start - 1
-        stop_ = start_ + num
+    def get_board_id(self):
+        bar = 0
+        offset = 0x0f
+        size = 1
         
-        self._verify_io_number_access(start, num)
-        outp = self._get_out_chache(0x00, 4)
-        names = outp.ordered_bit_names()
-        for d, name in zip(data, names[start_:stop_]):
-            if d == 1: outp.bit_on(name)
-            else: outp.bit_off(name)
-            continue
-        return self._set_register(0x00, outp, 4)
+        ret = self.read(bar, offset, size)
+        self.bid = ret.to_hex()[1]
+        return self.bid
+    
     
     def initialize(self):
         """ボードを初期化します
@@ -203,19 +153,30 @@ class pci2724_driver(interface_driver):
         -----
         - 以下の処理を実行します:
         
-            - デジタル出力の解除
-            - ラッチ出力の解除
+            - デジタル出力を全て 0 に
+            - ラッチ設定の初期化
+            - ACK 設定の初期化
+            - STB 設定の初期化
         
         - DioOpen 関数に概ね対応しますが、pyinterface には open の概念がありませんので
           initialize() を実行しなくともドライバへアクセス可能です。
         - initialize() を実行しない場合、直前のボード状況が反映されています。
         """
-        self.bytes_in[0].set(0)
-        self.bytes_out[0].set(0)
-        self.output_dword([0]*32)
+        self.output_dword(0)
         self.set_latch_status()
+        self.set_ack_pulse_command()
+        self.set_stb_pulse_command()
         return
-
+    
+    
+    def _verify_io_number_access(self, start, num):
+        if (start < 1) or (start+num > self.io_number+1):
+            msg = 'I/O number must be in 1-{0},'.format(self.io_number)
+            msg += ' while {0}-{1} is given.'.format(start, start+num-1)
+            raise InvalidIoNumberError(msg)
+        return
+    
+    
     def input_point(self, start, num):
         """デジタル入力を任意点数取得します
         
@@ -243,11 +204,11 @@ class pci2724_driver(interface_driver):
         [1, 0, 1, 0, 1]
         """
         self._verify_io_number_access(start, num)
-        inp = self._get_input()
-        bits_str = inp.ordered_bit()
-        bits = list(map(int, bits_str[start-1:start+num-1]))
+        inp = self.input_dword()
+        bits = inp.to_list()[start-1:start+num-1]
         return bits
-
+    
+    
     def output_point(self, data, start):
         """デジタル出力を任意点数設定します
         
@@ -261,12 +222,7 @@ class pci2724_driver(interface_driver):
             設定するデジタル出力状況のリストです (1:ON, 0:OFF)
         start : int
             設定する最初のチャンネルを指定します (範囲: 1 -- 32)
-        
-        Returns
-        -------
-        pyinterface.core.Bytes
-            デジタル出力状況
-        
+                
         Examples
         --------
         OUT3 より 4 チャンネルのデジタル出力を ON にします
@@ -274,8 +230,19 @@ class pci2724_driver(interface_driver):
         >>> pci2724.output_point([1,1,1,1], 3)
         3C000000
         """
-        return self._set_output(data, start_num)
-
+        bar = 0
+        offset = 0x00
+        
+        num = len(data)
+        self._verify_io_number_access(start, num)
+        new_d = self.log_bytes_out[0][0:4]
+        new_d = core.bytes2list(new_d)
+        new_d[start:start+num] = data
+        new_d = core.list2bytes(new_d)
+        self.write(bar, offset, new_d)
+        return 
+    
+    
     def input_byte(self, range_):
         """デジタル入力を1byte単位で取得します
         
@@ -318,24 +285,18 @@ class pci2724_driver(interface_driver):
         >>> pci2724.input_byte('IN9_16')
         [1, 1, 0, 0, 1, 0, 1, 0]
         """
-        if isinstance(range_, str):
-            if range_.find('IN1_8') != -1: start = 1
-            elif range_.find('IN9_16') != -1: start = 9
-            elif range_.find('IN17_24') != -1: start = 17
-            elif range_.find('IN25_32') != -1: start = 25
-            else: return
+        bar = 0
+        size = 1
         
-        if isinstance(range_, int):
-            start = range_
-            pass
+        if range_ == 'IN1_8': offset = 0x00
+        elif range_ == 'IN9_16': offset = 0x01            
+        elif range_ == 'IN17_24': offset = 0x02
+        elif range_ == 'IN25_32': offset = 0x03
+        else: return
         
-        num = 8
-            
-        self._verify_io_number_access(start, num)
-        inp = self._get_input()
-        bits_str = inp.ordered_bit()
-        bits = list(map(int, bits_str[start-1:start+num-1]))
-        return bits
+        d = self.read(bar, offset, size)
+        return d
+        
     
     def input_word(self, range_):
         """デジタル入力を2byte単位で取得します
@@ -373,23 +334,17 @@ class pci2724_driver(interface_driver):
         >>> pci2724.input_word('IN1_16')
         [1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0]
         """
-        if isinstance(range_, str):
-            if range_.find('IN1_16') != -1: start = 1
-            elif range_.find('IN17_32') != -1: start = 17
-            else: return
+        bar = 0
+        size = 2
         
-        if isinstance(range_, int):
-            start = range_
-            pass
-            
-        num = 16
-            
-        self._verify_io_number_access(start, num)
-        inp = self._get_input()
-        bits_str = inp.ordered_bit()
-        bits = list(map(int, bits_str[start-1:start+num-1]))
-        return bits
-
+        if range_ == 'IN1_16': offset = 0x00
+        elif range_ == 'IN17_32': offset = 0x02
+        else: return
+        
+        d = self.read(bar, offset, size)
+        return d
+        
+    
     def input_dword(self):
         """デジタル入力を4byte取得します
         
@@ -410,13 +365,15 @@ class pci2724_driver(interface_driver):
         [1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0,
          1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0]
         """
-        self._verify_io_number_access(1, 32)
-        inp = self._get_input()
-        bits_str = inp.ordered_bit()
-        bits = list(map(int, bits_str[0:32]))
-        return bits
+        bar = 0
+        size = 4
+        offset = 0x00
+        
+        d = self.read(bar, offset, size)
+        return d
 
-    def output_byte(self, data, range_):
+        
+    def output_byte(self, range_, data, fmt=''):
         """デジタル出力を1byte単位で設定します
         
         Notes
@@ -425,8 +382,6 @@ class pci2724_driver(interface_driver):
         
         Parameters
         ----------
-        data : list
-            設定するデジタル出力状況のリストです (1:ON, 0:OFF)。length は 8 にしてください。
         range_ : str
             デジタル出力状況を設定する範囲を指定します
             
@@ -448,10 +403,19 @@ class pci2724_driver(interface_driver):
                 * - 'OUT25_32' 
                   - OUT25 から OUT32 まで
         
-        Returns
-        -------
-        pyinterface.core.Bytes
-            デジタル出力状況
+        data : list or int
+            list の場合
+                設定するデジタル出力状況のリストです (1:ON, 0:OFF)。
+                length は 8 にしてください。
+            int の場合
+                signed char の bytes に変換して設定されます。
+            unsigned int を設定したい場合
+                data に正の int を代入し、fmt に '<B' を指定してください。
+        
+        fmt : str (option)
+            fmt を指定した場合、data を fmt に従って pack しようとします。
+            fmt に使用する文字列は、struct モジュールの書式です。
+        
         
         Examples
         --------
@@ -460,21 +424,34 @@ class pci2724_driver(interface_driver):
         >>> pci2724.output_byte([1,0,1,0,1,0,1,0], 'OUT1_8')
         55000000
         """
-        if len(data) != 8:
-            msg = 'data length should be 8'
-            msg += ' while {0} length list is given.'.format(len(data))
-            raise InvalidListLengthError(msg)
+        bar = 0
         
-        if isinstance(range_, str):
-            if range_.find('OUT1_8') != -1: range_ = 1
-            elif range_.find('OUT9_16') != -1: range_ = 9
-            elif range_.find('OUT17_24') != -1: range_ = 17
-            elif range_.find('OUT25_32') != -1: range_ = 25
-            else: return
+        if fmt != '':
+            d = struct.pack(fmt, data)
+        
+        elif type(data) in [list, tuple]: 
+            if len(data) != 8:
+                msg = 'data length should be 8, not {0}'.format(len(data))
+                raise InvalidListLengthError(msg)
+            d = core.list2bytes(data)
+        
+        elif type(data) == int:
+            d = struct.pack('<b', data)
             
-        return self._set_output(data, range_)
+        else:
+            return
+        
+        if range_ == 'OUT1_8': offset = 0x00
+        elif range_ == 'OUT9_16': offset = 0x01
+        elif range_ == 'OUT17_24': offset = 0x02
+        elif range_ == 'OUT25_32': offset = 0x03
+        else: return
+        
+        self.write(bar, offset, d)
+        return 
 
-    def output_word(self, data, range_):
+
+    def output_word(self, range_, data, fmt=''):
         """デジタル出力を2byte単位で設定します
         
         Notes
@@ -483,8 +460,6 @@ class pci2724_driver(interface_driver):
         
         Parameters
         ----------
-        data : list
-            設定するデジタル出力状況のリストです (1:ON, 0:OFF)。length は 16 にしてください。
         range_ : str
             デジタル出力状況を設定する範囲を指定します
             
@@ -499,32 +474,53 @@ class pci2724_driver(interface_driver):
         
                 * - 'OUT17_32'
                   - OUT17 から OUT32 まで
+
+        data : list or int
+            list の場合
+                設定するデジタル出力状況のリストです (1:ON, 0:OFF)。
+                length は 16 にしてください。
+            int の場合
+                signed short の bytes に変換して設定されます。
+            unsigned int を設定したい場合
+                data に正の int を代入し、fmt に '<H' を指定してください。
         
-        Returns
-        -------
-        pyinterface.core.Bytes
-            デジタル出力状況
+        fmt : str (option)
+            fmt を指定した場合、data を fmt に従って pack しようとします。
+            fmt に使用する文字列は、struct モジュールの書式です。
         
         Examples
         --------
         OUT17 より 2 byte 分のチャンネルのデジタル出力を設定します
         
         >>> pci2724.output_word([1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0], 'OUT17_32')
-        0000550F
-        """
-        if len(data) != 16:
-            msg = 'data length should be 16'
-            msg += ' while {0} length list is given.'.format(len(data))
-            raise InvalidListLengthError(msg)
-        
-        if isinstance(range_, str):
-            if range_.find('OUT1_16') != -1: range_ = 1
-            elif range_.find('OUT17_32') != -1: range_ = 17
-            else: return
-            
-        return self._set_output(data, range_)
 
-    def output_dword(self, data):
+        """
+        bar = 0
+        
+        if fmt != '':
+            d = struct.pack(fmt, data)
+        
+        elif type(data) in [list, tuple]: 
+            if len(data) != 16:
+                msg = 'data length must be 16, not {0}'.format(len(data))
+                raise InvalidListLengthError(msg)
+            d = core.list2bytes(data)
+        
+        elif type(data) == int:
+            d = struct.pack('<h', data)
+            
+        else:
+            return
+        
+        if range_ == 'OUT1_16': offset = 0x00
+        elif range_ == 'OUT17_32': offset = 0x02
+        else: return
+        
+        self.write(bar, offset, d)
+        return 
+
+
+    def output_dword(self, data, fmt=''):
         """デジタル出力を4byte設定します
         
         Notes
@@ -533,29 +529,51 @@ class pci2724_driver(interface_driver):
         
         Parameters
         ----------
-        data : list
-            設定するデジタル出力状況のリストです (1:ON, 0:OFF)。length は 32 にしてください。
+        data : list or int or float
+            list の場合
+                設定するデジタル出力状況のリストです (1:ON, 0:OFF)。
+                length は 32 にしてください。
+            int の場合
+                signed int の bytes に変換して設定されます。
+            unsigned int を設定したい場合
+                data に正の int を代入し、fmt に '<I' を指定してください。
         
-        Returns
-        -------
-        pyinterface.core.Bytes
-            デジタル出力状況
-        
+        fmt : str (option)
+            fmt を指定した場合、data を fmt に従って pack しようとします。
+            fmt に使用する文字列は、struct モジュールの書式です。
+
         Examples
         --------
         OUT1 より 4byte 分のチャンネルのデジタル出力を設定します
         
         >>> d = [1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0,1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0]
         >>> pci2724.output_dword(d)
-        550F550F
         """
-        if len(data) != 32:
-            msg = 'data length should be 32'
-            msg += ' while {0} length list is given.'.format(len(data))
-            raise InvalidListLengthError(msg)
+        bar = 0
+        offset = 0x00
         
-        return self._set_output(data, 1)
+        if fmt != '':
+            d = struct.pack(fmt, data)
+        
+        elif type(data) in [list, tuple]: 
+            if len(data) != 32:
+                msg = 'data length must be 32, not {0}'.format(len(data))
+                raise InvalidListLengthError(msg)
+            d = core.list2bytes(data)
+        
+        elif type(data) == int:
+            d = struct.pack('<i', data)
+            
+        elif type(data) == float:
+            d = struct.pack('<f', data)
+            
+        else:
+            return
+
+        self.write(bar, offset, d)
+        return 
     
+
     def set_latch_status(self, enable=''):
         """ラッチ回路の接続を設定します
         
@@ -592,10 +610,13 @@ class pci2724_driver(interface_driver):
         --------
         pci2724.set_latch_status('PORT0 PORT3')
         """
-        addr = 0x0b
-        flags = enable
-        return self._set_register(addr, flags)
+        bar = 0
+        offset = 0x0b
+        
+        self.set_flag(bar, offset, enable)
+        return
     
+
     def get_latch_status(self):
         """ラッチ回路の接続を取得します
         
@@ -603,8 +624,12 @@ class pci2724_driver(interface_driver):
         -----
         Compatibility: DioGetLatchStatus function in GPG-2000 driver
         """
-        addr = 0x0b
-        return self._get_register(addr)
+        bar = 0
+        offset = 0x0b
+        size = 1
+        
+        return self.read(bar, offset, size)
+    
     
     def get_ack_status(self):
         """ACK2, STB2 端子の接続状態を取得します
@@ -613,8 +638,11 @@ class pci2724_driver(interface_driver):
         -----
         Compatibility: DioGetAckStatus function in GPG-2000 driver
         """
-        addr = 0x08
-        return self._get_register(addr)
+        bar = 0
+        offset = 0x08
+        size = 1
+        
+        return self.read(bar, offset, size)
     
     def set_ack_pulse_command(self, ack='', pulse=''):
         """ACK1, PULS.OUT1 の出力制御を設定します
@@ -664,10 +692,13 @@ class pci2724_driver(interface_driver):
                 * - 'PO12'
                   - output Low pulse from PULS.OUT1 terminal
         """
-        addr = 0x08
+        bar = 0
+        offset = 0x08
         flags = ack + ' ' + pulse
-        return self._set_register(addr, flags)
+        
+        return self.set_flag(bar, offset, flags)
     
+
     def get_stb_status(self):
         """STB1, ACK1 端子の接続状態を取得します
         
@@ -675,9 +706,13 @@ class pci2724_driver(interface_driver):
         -----
         Compatibility: DioGetStbStatus function in GPG-2000 driver
         """
-        addr = 0x09
-        return self._get_register(addr)
+        bar = 0
+        offset = 0x09
+        size = 1
         
+        return self.read(bar, offset, size)
+        
+    
     def set_stb_pulse_command(self, stb='', pulse=''):
         """STB2, PULS.OUT2 の出力制御を設定します
         
@@ -726,8 +761,13 @@ class pci2724_driver(interface_driver):
                 * - 'PO22'
                   - output Low pulse from PULS.OUT2 terminal
         """
-        addr = 0x09
+        bar = 0
+        offset = 0x09
         flags = stb + ' ' + pulse
-        return self._set_register(addr, flags)
+        
+        return self.set_flag(bar, offset, flags)
+    
+
+
 
     
