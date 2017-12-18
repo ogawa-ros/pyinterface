@@ -109,13 +109,37 @@ class flagged_bytes(object):
     
     def __init__(self, bytes, bit_flag=(), fmt=''):
         self.bytes = bytes
-        self.bit_flag = bit_flag
+        
+        if bit_flag != ():
+            self.bit_flag = bit_flag
+            pass
+            
+        if fmt != '':
+            self.fmt = fmt
+            pass
+        
         pass
         
     def __repr__(self):
         return '<flagged_bytes size={0} bytes=0x{1}>'.format(len(self.bytes),
                                                              self.to_hex())
     
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            dictlist = self.to_dictlist()
+            for item in self.to_dictlist():
+                if item['flag'] == key: 
+                    return item['value']
+                continue
+            return None
+        
+        bit = self.to_list()
+        return bit[key]
+        
+    def set_flag(self, flag):
+        self.bit_flag = flag
+        return
+        
     def set_fmt(self, fmt):
         self.fmt = fmt
         return
@@ -128,6 +152,13 @@ class flagged_bytes(object):
         
     def to_list(self):
         return bytes2list(self.bytes)
+        
+    def to_dictlist(self):
+        bit = self.to_list()
+        flag_list = [f for flags in self.bit_flag for f in flags]
+        dictlist = [{'index': i, 'flag': f, 'value': b} for i, (b, f)
+                    in enumerate(zip(bit, flag_list))]
+        return dictlist
         
     def to_int(self):
         if len(self.bytes) == 1:
@@ -172,9 +203,9 @@ class flagged_bytes(object):
         return 0.0
         
     def to_flags(self):
-        bit = self.to_list()
-        flag_list = [f for flags in self.bit_flag for f in flags]
-        flag = ' '.join([f for i, f in zip(bit, flag_list) if i == 1])
+        dictlist = self.to_dictlist()
+        flag = ' '.join([item['flag'] for item in dictlist 
+                         if item['value']==1])
         return flag
 
     def unpack(self, fmt=''):

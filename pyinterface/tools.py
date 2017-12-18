@@ -2,7 +2,8 @@
 import pypci
 
 from . import pci2724
-#from . import pci6204
+from . import pci6204
+from . import pci7204
 
 
 interface_vendor_id = 0x1147
@@ -28,6 +29,13 @@ def open(board_name, board_id):
         
         if board_name == 6204:
             b = pci6204.pci6204_driver(board)
+            if b.board_id == board_id:
+                return b
+            pass
+
+
+        if board_name == 7204:
+            b = pci7204.pci7204_driver(board)
             if b.board_id == board_id:
                 return b
             pass
