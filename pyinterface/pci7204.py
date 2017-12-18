@@ -703,14 +703,57 @@ class pci7204_driver(core.interface_driver):
         count = self.ppmc_get_counter(axis)
         return count
     
-    
+        
     def set_counter(self, count, axis=1):
         self._verify_axis_num(axis)
         
         self.ppmc_set_counter(count, axis)
         return
+    
+    
+    def get_limit_config(self, mode='MASK', axis=1):
+        self._verify_axis_num(axis)
         
+        if mode not in ['MASK', 'LOGIC']:
+            msg = "mode must be 'MASK' or 'LOGIC'"
+            msg += ', not {0}'.format(mode)
+            raise TypeError(msg)
         
+        bar = axis
+        size = 1
+        
+        if mode == 'MASK':
+            offset = 0x08
+        elif mode == 'LOGIC':
+            offset = 0x09
+            pass
+        
+        d = self.read(bar, offset, size)
+        return d
+    
+    
+    def set_limit_config(self, mode='MASK', config='+SD -SD +EL -EL ORG ALM', 
+                         axis=1):
+        self._verify_axis_num(axis)
+        
+        if mode not in ['MASK', 'LOGIC']:
+            msg = "mode must be 'MASK' or 'LOGIC'"
+            msg += ', not {0}'.format(mode)
+            raise TypeError(msg)
+        
+        bar = axis
+        size = 1
+        
+        if mode == 'MASK':
+            offset = 0x08
+        elif mode == 'LOGIC':
+            offset = 0x09
+            pass
+        
+        d = self.set_flag(bar, offset, config)
+        return d
+    
+    
     def output_do(self, outp, axis=1):
         self._verify_axis_num(axis)
         
