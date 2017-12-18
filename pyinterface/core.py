@@ -80,13 +80,21 @@ class interface_driver(object):
         self.write(bar_num, offset, d)
         return
     
-    def get_flag(self, bar_num, offset):
-        flag_list = self.bit_flag_in[bar_num][offset]
-        d = self.read(bar_num, offset, 1)
-        bit = bytes2bit(d)
-        flag = ' '.join([f for i, f in zip(bit, flag_list) if i == 1])
-        return flag
+    def get_log(self, in_out, bar_num, offset):
+        if in_out == 'in':
+            d = self.log_bytes_in[bar_num][offset:offset+1]
+            f = self.bit_flags_in[bar_num][offset:offset+1]
             
+        elif in_out == 'out':            
+            d = self.log_bytes_out[bar_num][offset:offset+1]
+            f = self.bit_flags_out[bar_num][offset:offset+1]
+        
+        else:
+            return
+            
+        return flagged_bytes(d, f)
+    
+    
     def get_board_id(self):
         pass
 
@@ -162,6 +170,12 @@ class flagged_bytes(object):
             return self.unpack('<d')
         
         return 0.0
+        
+    def to_flags(self):
+        bit = self.to_list()
+        flag_list = [f for flags in self.bit_flag for f in flags]
+        flag = ' '.join([f for i, f in zip(bit, flag_list) if i == 1])
+        return flag
 
     def unpack(self, fmt=''):
         if fmt == '': fmt = self.fmt
