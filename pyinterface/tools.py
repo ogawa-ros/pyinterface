@@ -26,12 +26,11 @@ def open(board_name, board_id):
                 return b
             pass
         
-        """
         if board_name == 6204:
             b = pci6204.pci6204_driver(board)
             if b.board_id == board_id:
                 return b
             pass
-        """
+
         continue
     
