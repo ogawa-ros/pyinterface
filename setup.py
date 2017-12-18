@@ -4,7 +4,7 @@ import setuptools
 
 setuptools.setup(
     name = 'pyinterface',
-    version = '0.1.0',
+    version = __import__('pyinterface').__version__,
     description = 'driver for Interface PCI board',
     url = 'https://github.com/ars096/pyinterface2',
     author = 'Atsushi Nishimura',
