@@ -265,6 +265,14 @@ class pci7204_driver(core.interface_driver):
         self.ppmc_write_data(ct[2], axis)
         return
         
+    def ppmc_get_limit_status(self, axis=1):
+        cmd = 0b01000110
+        
+        self.ppmc_write_command(cmd, axis)
+        ret = self.ppmc_read_data(axis)
+        ret.set_flag([['FHL', 'FL', 'BHL', 'BL', 'ORG', 'ALM', 'RUN', '']])
+        return ret        
+    
     def ppmc_get_aux_in(self, axis=1):
         cmd = 0b01000100
         
@@ -690,8 +698,20 @@ class pci7204_driver(core.interface_driver):
         error = self.ppmc_get_error(axis)
         count = self.get_counter(axis)
         
+        lstatus = self.ppmc_get_limit_status(axis)
+        sdp = lstatus['FHL']
+        sdm = lstatus['BHL']
+        elp = lstatus['FL']
+        elm = lstatus['BL']
+        org = lstatus['ORG']
+        alm = lstatus['ALM']
+        lstatus2_bytes = core.list2bytes([sdp, sdm, elp, elm, 0, org, alm, 0])
+        lstatus2_fb = core.flagged_bytes(lstatus2_list)
+        lstatus2_fb.set_flag([['+SD', '-SD', '+EL', '-EL', '', 'ORG', 'ALM', '']])
+        
         status = {'busy': busy,
                   'interlock': ilock,
+                  'limit': lstatus2_fb,
                   'error': error,
                   'count': count}
         return status
