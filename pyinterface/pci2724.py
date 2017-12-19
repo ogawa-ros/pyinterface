@@ -232,7 +232,7 @@ class pci2724_driver(core.interface_driver):
         self._verify_io_number_access(start, num)
         new_d = self.log_bytes_out[0][0:4]
         new_d = core.bytes2list(new_d)
-        new_d[start:start+num] = data
+        new_d[start-1:start+num-1] = data
         new_d = core.list2bytes(new_d)
         self.write(bar, offset, new_d)
         return 
