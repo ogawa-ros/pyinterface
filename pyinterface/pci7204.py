@@ -706,7 +706,7 @@ class pci7204_driver(core.interface_driver):
         org = lstatus['ORG']
         alm = lstatus['ALM']
         lstatus2_bytes = core.list2bytes([sdp, sdm, elp, elm, 0, org, alm, 0])
-        lstatus2_fb = core.flagged_bytes(lstatus2_list)
+        lstatus2_fb = core.flagged_bytes(lstatus2_bytes)
         lstatus2_fb.set_flag([['+SD', '-SD', '+EL', '-EL', '', 'ORG', 'ALM', '']])
         
         status = {'busy': busy,
