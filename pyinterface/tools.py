@@ -1,6 +1,7 @@
 
 import pypci
 
+from . import pci2702
 from . import pci2724
 from . import pci6204
 from . import pci7204
@@ -21,6 +22,12 @@ def open(board_name, board_id):
         raise TypeError(msg)
     
     for board in board_list:
+        if board_name == 2702:
+            b = pci2702.pci2702_driver(board)
+            if b.board_id == board_id:
+                return b
+            pass
+        
         if board_name == 2724:
             b = pci2724.pci2724_driver(board)
             if b.board_id == board_id:
