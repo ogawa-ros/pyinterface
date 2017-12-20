@@ -217,8 +217,7 @@ class flagged_bytes(object):
     def print(self):
         msg = '%s\n\n'%(object.__repr__(self))
         
-        for i, d in enumerate(self.bytes):
-            byte = self.to_uint()
+        for i, byte in enumerate(self.bytes):
             bits1 = format(byte, '08b')
             bits2 = bits1[::-1]
             msg += 'value = 0x{byte:02X} (0b{bits1})\n'.format(**locals())
