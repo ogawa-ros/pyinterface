@@ -11,7 +11,7 @@ class InvalidListLengthError(Exception):
     pass
 
     
-class pci2724_driver(core.interface_driver):
+class pci2702_driver(core.interface_driver):
     bit_flags_in = (
         (
             ('IN1', 'IN2', 'IN3', 'IN4', 'IN5', 'IN6', 'IN7', 'IN8'),
@@ -396,7 +396,7 @@ class pci2724_driver(core.interface_driver):
         --------
         OUT1 より 1 byte 分のチャンネルのデジタル出力を設定します
         
-        >>> pci2724.output_byte([1,0,1,0,1,0,1,0], 'OUT1_8')
+        >>> pci2702.output_byte([1,0,1,0,1,0,1,0], 'OUT1_8')
         55000000
         """
         bar = 0
@@ -477,7 +477,7 @@ class pci2724_driver(core.interface_driver):
         --------
         OUT17 より 2 byte 分のチャンネルのデジタル出力を設定します
         
-        >>> pci2724.output_word([1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0], 'OUT17_32')
+        >>> pci2702.output_word([1,0,1,0,1,0,1,0,1,1,1,1,0,0,0,0], 'OUT17_32')
 
         """
         bar = 0
@@ -624,7 +624,7 @@ class pci2724_driver(core.interface_driver):
         
         Examples
         --------
-        pci2724.set_latch_status('PORT0 PORT3')
+        pci2702.set_latch_status('PORT0 PORT3')
         """
         bar = 0
         offset = 0x0b
