@@ -130,10 +130,10 @@ class pci6204_driver(core.interface_driver):
     
     
     def initialize(self):
-        self.set_counter(0x00000000, ch=1)
-        self.set_counter(0x00000000, ch=2)
-        self.set_comparator(0xffffffff, ch=1)
-        self.set_comparator(0xffffffff, ch=2)
+        self.set_counter(0, ch=1)
+        self.set_counter(0, ch=2)
+        self.set_comparator(-1, ch=1)
+        self.set_comparator(-1, ch=2)
         self.set_mode(ch=1)
         self.set_mode(ch=2)
         self.enable_count(ch=1)
@@ -390,7 +390,7 @@ class pci6204_driver(core.interface_driver):
         flags = 'CC1'
         self.set_flag(bar, offset, flags)
         return
-
+    
     
     def get_counter(self, ch=1):
         """
