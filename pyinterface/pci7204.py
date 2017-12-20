@@ -131,6 +131,8 @@ class pci7204_driver(core.interface_driver):
         self.set_base_clock(axis=axis)
         self.ppmc_init(axis=axis)
         self.set_pulse_out(axis=axis)
+        self.set_limit_config('MASK', config='', axis=1)
+        self.set_limit_config('LOGIC', config='', axis=1)
         self.set_counter(0, axis=axis)
         self.output_do([0,0,0,0], axis=axis)
         self.motion_config[axis-1] = {'JOG': {}, 'PTP': {}}
