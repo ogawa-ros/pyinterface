@@ -743,9 +743,9 @@ class pci7204_driver(core.interface_driver):
         size = 1
         
         if mode == 'MASK':
-            offset = 0x08
-        elif mode == 'LOGIC':
             offset = 0x09
+        elif mode == 'LOGIC':
+            offset = 0x08
             pass
         
         d = self.read(bar, offset, size)
@@ -765,9 +765,9 @@ class pci7204_driver(core.interface_driver):
         size = 1
         
         if mode == 'MASK':
-            offset = 0x08
-        elif mode == 'LOGIC':
             offset = 0x09
+        elif mode == 'LOGIC':
+            offset = 0x08
             pass
         
         d = self.set_flag(bar, offset, config)
