@@ -14,7 +14,10 @@ setuptools.setup(
     packages = [
         'pyinterface',
     ],
-    install_requires = ['portio'],
+    install_requires = [
+        'portio',
+        'pyinterface',
+    ],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
