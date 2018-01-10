@@ -16,4 +16,5 @@ try:
     from . import pci6204
     from . import pci7204
     
-
+except:
+    pass
