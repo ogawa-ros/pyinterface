@@ -16,7 +16,7 @@ setuptools.setup(
     ],
     install_requires = [
         'portio',
-        'pyinterface',
+        'pypci',
     ],
     classifiers=[
         'Programming Language :: Python :: 3',
