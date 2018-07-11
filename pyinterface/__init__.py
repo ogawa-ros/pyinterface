@@ -1,6 +1,6 @@
 
 
-__version__ = '0.4.0'
+__version__ = '0.4.3'
 
 
 try:
@@ -10,7 +10,9 @@ try:
     
     from . import pci2702
     from . import pci2724
+    from . import pci3165
     from . import pci3177
+    from . import pci3342
     from . import pci340516
     from . import pci340816
     from . import pci6204
