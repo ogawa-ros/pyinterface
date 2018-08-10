@@ -7,6 +7,7 @@ from . import pci6204
 from . import pci7204
 from . import pci3165
 from . import pci3177
+from . import pci3342
 from . import pci340816
 from . import pci340516
 
