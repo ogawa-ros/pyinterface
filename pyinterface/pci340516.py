@@ -172,8 +172,8 @@ class pci340516_driver(core.interface_driver):
 
 
         if current == 100.0: bytes_c = int(res_int - 1)
-        else: bytes_c = int((current + cur_range)/(cur_range/(res_int/2)))
-        bytes_c = int((current + cur_range)/(cur_range/(res_int/2)))
+        else: bytes_c = int(res_int * current / cur_range)
+        
         bit_ = bin(bytes_c).replace('0b', '0'*(16-(len(bin(bytes_c))-2)))
         bit_list = [int(bit_[i]) for i in range(len(bit_))]
         bit_list.reverse()
@@ -249,10 +249,18 @@ class pci340516_driver(core.interface_driver):
 
 
         data_cur = self._current2list(current=current)
-        new_d_cur = core.list2byte(data_cur)
+        new_d_cur = core.list2bytes(data_cur)
         self.write(bar, offset_cur, new_d_cur)
         return
 
+    def _select_ch(self, ch=''):
+        bar = 0
+        size = 1
+        offset = 0x07
+
+        self.write(bar, offset, core.list2bytes(self._ch2bit(ch)))
+        
+        return
 
     
     def _start_sampling(self):
@@ -285,24 +293,30 @@ class pci340516_driver(core.interface_driver):
 
 
 
-    def set_sampling_range(self, mode='DA_0_100mA'):
+    def set_sampling_range(self, ch='ch1', mode='DA_0_100mA'):
         bar = 0
         size = 1
         offset = 0x06
 
-
-        if mode == 'DA_0_1mA': mode = 'RG0'
-        elif mode == 'DA_0_100mA': mode = 'RG1'
+        
+        if mode == 'DA_0_1mA':
+            # mode = 'RG0'
+            da = [0]*8
+        elif mode == 'DA_0_100mA':
+            # mode = 'RG1'
+            da = [1] + [0]*7
         else:
             msg = 'Sampling range is DA_0_1mA of DA_0_100mA '
             msg += 'while {0} is given.'.format(mode)
             raise InvalidSamplingModeError(msg)
 
 
-        flags = mode
+        # flags = mode
 
-
-        self.set_flag(bar, offset, flags)
+        self._select_ch(ch)
+        # self.set_flag(bar, offset, flags)
+        self.write(bar, offset, core.list2bytes(da))
+        time.sleep(0.001)
         return
 
 
