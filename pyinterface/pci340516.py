@@ -5,30 +5,25 @@ import struct
 from . import core
 
 
+ch_number = 8
+outputrange_list = ['DA0_1mA', 'DA0_100mA']
 
 
 class InvalidChTypeError(Exception):
     pass
 
-
-
-
-class InvalidChRangeError(Exception):
+class InvalidChOutputrangeError(Exception):
     pass
-
-
-
 
 class InvalidCurrentError(Exception):
     pass
 
 
-
-
 class InvalidSamplingModeError(Exception):
     pass
 
-
+class InvalidOnoffError(Exception):
+    pass
 
 
 class pci340516_driver(core.interface_driver):
@@ -40,7 +35,8 @@ class pci340516_driver(core.interface_driver):
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
-            ('RG0', 'RG1', '', '', '', '', '', ''),
+            ('RG', '', '', '', '', '', '', ''),
+            ('CH0', 'CH1', 'CH2', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
@@ -60,8 +56,7 @@ class pci340516_driver(core.interface_driver):
             ('BID0', 'BID1', 'BID2', 'BID3', 'M/S', 'CLKOEN', 'TRGOEN', ''),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
-            ('', '', '', '', '', '', '', ''),
-            ('AO', '', '', '', '', '', '', ''),
+            ('OC0', 'OC1', 'OC2', 'OC3', 'OC4', 'OC5', 'OC6', 'OC7'),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('IN1', 'IN2', '', '', '', '', '', ''),
@@ -78,8 +73,8 @@ class pci340516_driver(core.interface_driver):
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('MD0', 'MD1', '', '', '', '', '', ''),
-            ('', '', '', '', '', '', '', ''),
-            ('', '', '', '', '', '', '', ''),
+            ('RG', '', '', '', '', '', '', ''),
+            ('CH0', 'CH1', 'CH2', '', '', '', '', ''),
             ('TCTRL0', 'TCTRL1', 'TCTRL2', 'TCTRL3', 'TCTRL4', 'TCTRL5', 'TCTRL6', 'TCTRL7'),
             ('TCTRL8', 'TCTRL9', 'TCTRL10', 'TCTRL11', 'TCTRL12', 'TCTRL13', 'TCTRL14', 'TCTRL15'),
             ('TCTRL16', 'TCTRL17', 'TCTRL18', 'TCTRL19', 'TCTRL20', 'TCTRL21', 'TCTRL22', 'TCTRL23'),
@@ -99,7 +94,7 @@ class pci340516_driver(core.interface_driver):
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
-            ('AO', '', '', '', '', '', '', ''),
+            ('OC0', 'OC1', 'OC2', 'OC3', 'OC4', 'OC5', 'OC6', 'OC7'),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('IN1', 'IN2', '', '', '', '', '', ''),
@@ -113,275 +108,255 @@ class pci340516_driver(core.interface_driver):
         offset = 0x17
         size = 1
 
-
         ret = self.read(bar, offset, size)
         bid = ret.to_hex()[1]
 
-
         return bid
 
-
-
-
-    def _verify_current(self, current=0.0):
-        cur_limit = 100.0
-        if 0 <= current <= cur_limit: pass
-        else:
-            msg = 'Current must be in 0[mA] - {0}[mA] '.format(cur_limit)
-            msg += 'while {0}[mA] is given.'.format(current)
-            raise InvalidCurrentError(msg)
-        return current
-
-
-
-
-    def _verify_ch(self, ch=''):
-        ch_lim_initial = 1
-        ch_lim_final = 8
-        
-        if ch.find('-') == -1:
-            msg = 'Ch type must be chx-chy absolutelly '
-            msg += 'while {0} is given.'.format(ch)
-            raise InvalidChTypeError(msg)
-        
-        ch_ = ch.split('-')
-        if len(ch_) == 2: pass
-        else :
-            msg = 'Ch type must be chx-chy absolutelly '
-            msg += 'while {0} is given.'.format(ch)
-            raise InvalidChTypeError(msg)
-            
-        ch_initial, ch_final = int(ch_[0].replace('ch', '')), int(ch_[1].replace('ch', ''))
-        if 1 <= ch_initial < ch_final <= 8: pass
-        else:
-            msg = 'Ch range is in ch{0} - ch{1} '.format(ch_lim_initial, ch_lim_final)
-            msg = 'while ch{0} - ch{1} is given.'.format(ch_initial, ch_final)
-        ch = [i for i in range(ch_initial, ch_final+1)]
-
-
-        return ch
-
-
-
-
-    def _current2list(self, current=0.0): # DA_1_100mV only.
-        current = float(current)
-        cur_range = 100.0
-        res = 16.0
-        res_int = 2**res
-
-
-        if current == 100.0: bytes_c = int(res_int - 1)
-        else: bytes_c = int(res_int * current / cur_range)
-        
-        bit_ = bin(bytes_c).replace('0b', '0'*(16-(len(bin(bytes_c))-2)))
-        bit_list = [int(bit_[i]) for i in range(len(bit_))]
-        bit_list.reverse()
-
-
-        return bit_list
-
-
-
-
-    def _set_sampling_config(self, mode=''):
+    def _select_ch(self, ch=1):
         bar = 0
-        offset = 0x05
+        offset = 0x07
+        flags_list = self.bit_flags_out[0][offset]
 
-
-        if mode == 'all_cout_disable': mode = ''
-        elif mode == 'all_cout': mode = 'MD0'
-        elif mode == 'all_cout_clear': mode = 'MD1'
-        elif mode == 'all_cout_enable': mode = 'MD0 MD1'
-
-
-        flags = mode
-
+        ch = self._ch2list(ch)[0:3]
+        flags_list = [j + ' ' for i, j in zip(ch, flags_list) if i == '1']
+        flags = ''.join(map(str, flags_list))[:-1]
 
         self.set_flag(bar, offset, flags)
-        return
+        time.sleep(1 * 10 ** (-3))
+        return 
 
-
-
-
-    def _ch2bit(self, ch=''):
-        if ch == '': return b''
+    def _ch2list(self, ch=1):
+        if ch == 0: return []
         else:
-            ch = int(ch.replace('ch', ''))
-            ch = bin(ch-1).replace('0b', '0'*(8-(len(bin(ch-1))-2)))
-            bit_list = [ch[i] for i in range(len(ch))]
+            bit_ch = bin(ch-1).replace('0b', '0' * (8 - (len(bin(ch - 1)) - 2)))
+            bit_list = [bit_ch[i] for i in range(len(bit_ch))]
             bit_list.reverse()
-
 
             return bit_list
 
+    def _current2list(self, current=0., outputrange='DA0_100mA'):
+        if outputrange == outputrange_list[0]: current_outputrange = 1.
+        elif outputrange == outputrange_list[1]: current_outputrange =100.
+        resolution = 16
+        resolution_int = 2**resolution
 
+        if current == current_outputrange: bytes_current = int(resolution_int - 1)
+        else: bytes_current = int(resolution_int * current / current_outputrange)
 
+        bit = bin(bytes_current).replace('0b', '0'*(16-(len(bin(bytes_current))-2)))
+        bit_list = [int(bit[i]) for i in range(len(bit))]
+        bit_list.reverse()
 
-    def _da_onoff(self, onoff=0):
+        return bit_list
+
+    def _verify_onoff(self, onoff=0):
+        if onoff in [0, 1]: pass
+        else:
+            msg = 'Onoff is 0 or 1, while onoff is given {}.'.format(onoff)
+            raise InvalidOnoffError(msg)
+        return
+    
+    def _verify_ch(self, ch=1):
+        if ch in range(1, ch_number + 1): pass
+        else:
+            msg = 'Ch outputrange is in ch1-ch{},'.format(ch_number)
+            msg += ' while ch{} is given.'.format(ch)
+            raise InvalidChOutputrangeError(msg)
+        return
+
+    def _verify_sampling_outputrange(self, outputrange='DA0_100mA'):
+        if outputrange in outputrange_list: pass
+        else:
+            msg = 'Sampling outputrange is {0} or {1.}'.format(*outputrange_list)
+            raise InvalidSamplingOutputrangeError(msg)
+        return
+    
+    def _verify_current(self, current=0., outputrange='DA0_100mA'):
+        if outputrange == outputrange_list[0]:
+            if 0. <= current <= 1.: pass
+            else:
+                msg = 'Output outputrange is {},'.format(outputrange)
+                msg += ' while {}mA is given.'.format(current)
+                raise InvalidCurrentError(msg)
+        elif outputrange == outputrange_list[1]:
+            if 0. <= current <= 100.: pass
+            else:
+                msg = 'Output outputrange is {},'.format(single_outputrange)
+                msg += ' while {}mA is given.'.format(current)
+                raise InvalidCurrentError(msg)
+        return
+
+    def _set_sampling_config(self, config=''):
         bar = 0
-        offset = 0x1b
+        offset = 0x05
 
+        if config == 'output_disable': config = ''
+        elif config == 'output': config = 'MD0'
+        elif config == 'output_clear': config = 'MD1'
+        elif config == 'output_enable': config = 'MD0 MD1'
 
-        if onoff == 0: onoff_ = ''
-        if onoff == 1: onoff_ = 'AO'
-
-
-        flags = onoff_
-
-
+        flags = config
         self.set_flag(bar, offset, flags)
         return
 
 
+    def get_outputrange(self, ch=1):
+        """電流出力レンジを取得します
+
+        Prameters
+        ---------
+        ch : int
+            取得する電流出力レンジのチャンネルを指定します（範囲: 1 -- 8）
+        
+        Returns
+        -------
+        dict
+            指定したチャンネルと電流出力レンジのディクショナリ
+        """
+        bar = 0
+        size = 1
+        offset = 0x06
+
+        self._verify_ch(ch)
+        self._select_ch(ch)
+        status = self.read(bar, offset, size)
+
+        return {'ch{}'.format(ch):outputrange_list[status.to_int()]}
+
+
+    def set_outputrange(self, ch=1, outputrange='DA0_100mA'):
+        """電流出力レンジを設定します
+
+        Prameters
+        ---------
+        ch : int
+            取得する電流出力レンジのチャンネルを指定します（範囲: 1 -- 8）
+        outputrange : str
+            設定する電流出力レンジを指定します
+              - 'DA0_1mA'
+              - 'DA0_100mA' (default)
+        """
+        bar = 0
+        offset = 0x06
+        flags_list = self.bit_flags_out[0][offset]
+
+        self._verify_ch(ch)
+        self._verify_sampling_outputrange(outputrange)
+        flags = flags_list[not(outputrange_list.index(outputrange))]
+        
+        self._select_ch(ch)
+        self.set_flag(bar, offset, flags)
+        return
+
     
-    def _da_output(self, ch='', current=0.0):
+    def get_onoff(self, ch=1):
+        """電流出力 接続/遮断を取得します
+
+        Prameters
+        ---------
+        ch : int
+            取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 8）
+        
+        Returns
+        -------
+        dict
+            指定したチャンネルと電流出力 接続/遮断のディクショナリ
+        """
+        bar = 0
+        size = 1
+        offset = 0x1b
+
+        self._verify_ch(ch)
+        status = self.read(bar, offset, size)
+
+        return {'ch{}'.format(ch):status.to_list()[ch-1]}
+
+
+    def set_onoff(self, ch=1, onoff=0):
+        """電流出力 接続/遮断を設定します
+
+        Prameters
+        ---------
+        ch : int
+            取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 8）
+        onoff : 0（接続） -- 1（遮断）
+            設定する電流出力 接続/遮断を指定します
+        """
+        bar = 0
+        size = 1
+        offset = 0x1b
+        current_onoff = self.read(bar, offset, size).to_list()
+
+        self._verify_ch(ch)
+        self._verify_onoff(onoff)
+        
+        def calbit(a, b):
+            return (not(a) and b) or (a and b)
+        
+        change_onoff = current_onoff.copy()
+        change_onoff[ch-1] = onoff
+        target_onoff = [calbit(i, j) for i, j in zip(current_onoff, change_onoff)]
+        self.write(bar, offset, core.list2bytes(target_onoff))
+        time.sleep(1 * 10 ** (-3))
+        return
+    
+
+    def output_current(self, ch=1, current=0., outputrange='DA0_100mA'):
+        """電流出力をします （Main Method）
+
+        Prameters
+        ---------
+        ch : int
+            取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 8）
+        current : float
+            出力する電流の値を指定します
+              - 'DA0_1mA'   のとき、0. -- 1.
+              - 'DA0_100mA' のとき、0. -- 100.
+        outputrange : str
+            設定する電流出力レンジを指定します
+              - 'DA0_1mA'
+              - 'DA0_100mA' (default)
+        """
         bar = 0
         size_ch = 1
         size_cur = 2
         offset_ch = 0x02
-        offset_cur = 0x00
+        offset_current = 0x00
 
+        self._verify_ch(ch)
+        self._verify_sampling_outputrange(outputrange)
+        self.set_outputrange(ch, outputrange)
+        self._verify_current(current, outputrange)
 
-        data_ch = self._ch2bit(ch=ch)
-        new_d_ch = core.list2bytes(data_ch)
-        self.write(bar, offset_ch, new_d_ch)
-
-
-        data_cur = self._current2list(current=current)
-        new_d_cur = core.list2bytes(data_cur)
-        self.write(bar, offset_cur, new_d_cur)
-        return
-
-    def _select_ch(self, ch=''):
-        bar = 0
-        size = 1
-        offset = 0x07
-
-        self.write(bar, offset, core.list2bytes(self._ch2bit(ch)))
-        
+        self._set_sampling_config('all_output_disable')
+        self.set_onoff(ch, 1)
+        self.write(bar, offset_ch, core.list2bytes(self._ch2list(ch)))
+        self.write(bar, offset_current, core.list2bytes(self._current2list(current, outputrange)))
+        self._set_sampling_config('all_output')
         return
 
     
-    def _start_sampling(self):
-        self._set_sampling_config(mode='all_cout')
-
-
-
-
-    def output_da(self, ch='', current=0.0):
-        bar = 0
-        size = 2
-        offset = 0x00
-
-
-        ch = self._verify_ch(ch=ch)
-        current = self._verify_current(current=current)
-        self._set_sampling_config(mode='all_cout_enable')
-        self._da_onoff(onoff=1)
-        time.sleep(0.01)
-
-
-        for i in range(len(ch)):
-            self._da_output('ch{0}'.format(i), current)
-
-
-        self._start_sampling()
-        time.sleep(0.01)
-        return
-
-
-
-
-    def set_sampling_range(self, ch='ch1', mode='DA_0_100mA'):
-        bar = 0
-        size = 1
-        offset = 0x06
-
-        
-        if mode == 'DA_0_1mA':
-            # mode = 'RG0'
-            da = [0]*8
-        elif mode == 'DA_0_100mA':
-            # mode = 'RG1'
-            da = [1] + [0]*7
-        else:
-            msg = 'Sampling range is DA_0_1mA of DA_0_100mA '
-            msg += 'while {0} is given.'.format(mode)
-            raise InvalidSamplingModeError(msg)
-
-
-        # flags = mode
-
-        self._select_ch(ch)
-        # self.set_flag(bar, offset, flags)
-        self.write(bar, offset, core.list2bytes(da))
-        time.sleep(0.001)
-        return
-
-
-    
-    def get_sampling_range(self):
-        bar = 0
-        size = 1
-        offset = 0x06
-
-
-        return self.read(bar, offset, size).print()
-        
-
-
-    def _verify_ch_sim(self, ch=''):
-        ch_lim_initial = 1
-        ch_lim_final = 8
-
-
-        if ch in ['ch{}'.format(i) for i in range(ch_lim_initial,ch_lim_final+1)]:
-            pass
-        else:
-            msg = 'Ch range is in ch{0} - ch{1} '.format(ch_lim_initial, ch_lim_final)
-            msg += 'while {0} is given.'.format(ch)
-            raise InvalidChRangeError(msg)
-            
-        return ch
-
-
-    
-    def output_da_sim(self, ch='', current=0.0):
-        bar = 0
-        size = 2
-        offset = 0x00
-
-
-        ch_ = self._verify_ch_sim(ch=ch)
-        current = self._verify_current(current=current)
-        self._set_sampling_config(mode='all_cout_enable')
-        self._da_onoff(onoff=1)
-        time.sleep(0.01)
-
-
-        self._da_output(ch_, current)
-
-
-        self._start_sampling()
-        time.sleep(0.01)
-        return
-
-
-
-
-    def initialize(self):
-        self._da_onoff(onoff=1)
-        self._set_sampling_config('all_cout_clear')
-
-
-
-
     def finalize(self):
-        self._set_sampling_config('all_cout_clear')
-        self._da_onoff(onoff=0)
+        """電流出力を全チャンネル遮断します
+        None
+        """
+        self.set_onoff_all(0)
+        return
 
 
-# History
-# -------
-# written by K.Sakasai
+        
+
+        
+
+    
+
+        
+    
+    
+
+
+
+
+    
+    
