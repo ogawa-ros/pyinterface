@@ -124,7 +124,7 @@ class pci340516_driver(core.interface_driver):
 
         self.set_flag(bar, offset, flags)
         time.sleep(1 * 10 ** (-3))
-        return 
+        return
 
     def _ch2list(self, ch=1):
         if ch == 0: return []
@@ -156,7 +156,7 @@ class pci340516_driver(core.interface_driver):
             msg = 'Onoff is 0 or 1, while onoff is given {}.'.format(onoff)
             raise InvalidOnoffError(msg)
         return
-    
+
     def _verify_ch(self, ch=1):
         if ch in range(1, ch_number + 1): pass
         else:
@@ -171,7 +171,7 @@ class pci340516_driver(core.interface_driver):
             msg = 'Sampling outputrange is {0} or {1.}'.format(*outputrange_list)
             raise InvalidSamplingOutputrangeError(msg)
         return
-    
+
     def _verify_current(self, current=0., outputrange='DA0_100mA'):
         if outputrange == outputrange_list[0]:
             if 0. <= current <= 1.: pass
@@ -208,7 +208,7 @@ class pci340516_driver(core.interface_driver):
         ---------
         ch : int
             取得する電流出力レンジのチャンネルを指定します（範囲: 1 -- 8）
-        
+
         Returns
         -------
         dict
@@ -244,12 +244,12 @@ class pci340516_driver(core.interface_driver):
         self._verify_ch(ch)
         self._verify_sampling_outputrange(outputrange)
         flags = flags_list[not(outputrange_list.index(outputrange))]
-        
+
         self._select_ch(ch)
         self.set_flag(bar, offset, flags)
         return
 
-    
+
     def get_onoff(self, ch=1):
         """電流出力 接続/遮断を取得します
 
@@ -257,7 +257,7 @@ class pci340516_driver(core.interface_driver):
         ---------
         ch : int
             取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 8）
-        
+
         Returns
         -------
         dict
@@ -290,17 +290,17 @@ class pci340516_driver(core.interface_driver):
 
         self._verify_ch(ch)
         self._verify_onoff(onoff)
-        
+
         def calbit(a, b):
             return (not(a) and b) or (a and b)
-        
+
         change_onoff = current_onoff.copy()
         change_onoff[ch-1] = onoff
         target_onoff = [calbit(i, j) for i, j in zip(current_onoff, change_onoff)]
         self.write(bar, offset, core.list2bytes(target_onoff))
         time.sleep(1 * 10 ** (-3))
         return
-    
+
 
     def output_current(self, ch=1, current=0., outputrange='DA0_100mA'):
         """電流出力をします （Main Method）
@@ -336,27 +336,10 @@ class pci340516_driver(core.interface_driver):
         self._set_sampling_config('all_output')
         return
 
-    
+
     def finalize(self):
         """電流出力を全チャンネル遮断します
         None
         """
         self.set_onoff_all(0)
         return
-
-
-        
-
-        
-
-    
-
-        
-    
-    
-
-
-
-
-    
-    
