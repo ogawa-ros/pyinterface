@@ -18,7 +18,6 @@ class InvalidChOutputrangeError(Exception):
 class InvalidCurrentError(Exception):
     pass
 
-
 class InvalidSamplingModeError(Exception):
     pass
 
