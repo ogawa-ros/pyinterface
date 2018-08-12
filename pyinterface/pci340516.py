@@ -279,7 +279,7 @@ class pci340516_driver(core.interface_driver):
         ---------
         ch : int
             取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 8）
-        onoff : 0（接続） -- 1（遮断）
+        onoff : 0（遮断） -- 1（接続）
             設定する電流出力 接続/遮断を指定します
         """
         bar = 0
@@ -340,5 +340,5 @@ class pci340516_driver(core.interface_driver):
         """電流出力を全チャンネル遮断します
         None
         """
-        self.set_onoff_all(0)
+        [self.set_onoff(_) for _ in range(1, ch_number + )]
         return
