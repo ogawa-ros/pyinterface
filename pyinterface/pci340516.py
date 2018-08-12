@@ -340,5 +340,5 @@ class pci340516_driver(core.interface_driver):
         """電流出力を全チャンネル遮断します
         None
         """
-        [self.set_onoff(_) for _ in range(1, ch_number + )]
+        [self.set_onoff(_) for _ in range(1, ch_number + 1)]
         return
