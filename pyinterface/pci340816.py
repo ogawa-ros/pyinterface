@@ -200,7 +200,7 @@ class pci340816_driver(core.interface_driver):
         self._select_ch(ch)
         self.write(bar, offset, core.list2bytes(self._voltage2list(voltage)))
 
-        # print('[OUTPUT INFO] CH:{ch} Voltage:{voltage:.2f}V'.format(**locals()))
+        print('[OUTPUT INFO] CH:{ch} Voltage:{voltage:.2f}V'.format(**locals()))
         return
 
 
