@@ -143,31 +143,17 @@ class pci3177_driver(core.interface_driver):
             raise InvalidChError(msg)
         return
 
-<<<<<<< HEAD
-    def _list2voltage(self, voltage_list): # support ± 10 V
-        voltage_range = 10
-        resolution = 12
-        resolution_int = 2 ** resolution
-
-        voltage_int = int.from_bytes(core.list2bytes(voltage_list), 'little')
-        voltage = -voltage_range * (voltage_range / (resolution_int / 2)) * voltage_int
-
-        return voltage
-
-
-    '''                                                 
     def _verify_mode(self, mode):
         mode_list = ['single', 'diff']
         if mode in mode_list: pass
-=======
+
     def _verify_inputrange(self, inputrange='DA-10_10V'):
         if inputrange in inputrange_list: pass
->>>>>>> 8ef3887f614f99543daf15dfac6b05faec9247a1
         else:
             msg = 'Inputrange is {0}.'.format(inputrange_list)
             raise InvalidInputrangeError(msg)
         return
-    
+
     def _list2voltage(self, voltage_list, inputrange):
         voltage_range = float(inputrange.split('_')[-1].replace('V', ''))
         resolution = 12
@@ -185,7 +171,7 @@ class pci3177_driver(core.interface_driver):
 
             return voltage
         return
-        
+
     def _is_busy(self):
         bar = 0
         size = 1
@@ -261,12 +247,12 @@ class pci3177_driver(core.interface_driver):
         self._verify_mode(mode)
         self._verify_ch(ch, mode)
         self._verify_inputrange(inputrange)
-        
+
         self._set_sampling_mode(mode)
         self._start_sampling(ch)
         voltage = self._list2voltage(self.read(bar, offset, size).to_list(), inputrange)
 
         if mode == 'single': pass
         elif mode == 'diff': voltage = voltage / 2
-        
+
         return voltage
