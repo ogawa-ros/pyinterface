@@ -338,6 +338,7 @@ class pci340516_driver(core.interface_driver):
         self.write(bar, offset_ch, core.list2bytes(self._ch2list(ch)))
         self.write(bar, offset_current, core.list2bytes(self._current2list(current, outputrange)))
         self._set_sampling_config('all_output')
+
         print('[OUTPUT INFO] CH:{ch} Range:{ouputrange} Current:{current}'.format(**locals()))
         return
 
