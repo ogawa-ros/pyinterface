@@ -2,7 +2,8 @@
 
 import time
 import struct
-from . import core
+# from . import core
+import core
 
 
 ch_number = 8
@@ -15,7 +16,7 @@ class InvalidChRangeError(Exception):
 class InvalidCurrentError(Exception):
     pass
 
-class InvalidSamplingModeError(Exception):
+class InvalidOutputrangeError(Exception):
     pass
 
 class InvalidOnoffError(Exception):
@@ -164,8 +165,8 @@ class pci340516_driver(core.interface_driver):
     def _verify_sampling_outputrange(self, outputrange='DA0_100mA'):
         if outputrange in outputrange_list: pass
         else:
-            msg = 'Sampling outputrange is {0} or {1.}'.format(*outputrange_list)
-            raise InvalidSamplingOutputrangeError(msg)
+            msg = 'Sampling outputrange is {0} or {1}.'.format(*outputrange_list)
+            raise InvalidOutputrangeError(msg)
         return
     
     def _verify_current(self, current=0., outputrange='DA0_100mA'):
