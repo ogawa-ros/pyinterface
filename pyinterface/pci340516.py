@@ -9,10 +9,7 @@ ch_number = 8
 outputrange_list = ['DA0_1mA', 'DA0_100mA']
 
 
-class InvalidChTypeError(Exception):
-    pass
-
-class InvalidChOutputrangeError(Exception):
+class InvalidChRangeError(Exception):
     pass
 
 class InvalidCurrentError(Exception):
@@ -115,7 +112,7 @@ class pci340516_driver(core.interface_driver):
     def _select_ch(self, ch=1):
         bar = 0
         offset = 0x07
-        flags_list = self.bit_flags_out[0][offset]
+        flags_list = self.bit_flags_out[bar][offset]
 
         ch = self._ch2list(ch)[0:3]
         flags_list = [j + ' ' for i, j in zip(ch, flags_list) if i == '1']
@@ -123,7 +120,7 @@ class pci340516_driver(core.interface_driver):
 
         self.set_flag(bar, offset, flags)
         time.sleep(1 * 10 ** (-3))
-        return
+        return 
 
     def _ch2list(self, ch=1):
         if ch == 0: return []
@@ -155,13 +152,13 @@ class pci340516_driver(core.interface_driver):
             msg = 'Onoff is 0 or 1, while onoff is given {}.'.format(onoff)
             raise InvalidOnoffError(msg)
         return
-
+    
     def _verify_ch(self, ch=1):
         if ch in range(1, ch_number + 1): pass
         else:
-            msg = 'Ch outputrange is in ch1-ch{},'.format(ch_number)
+            msg = 'Ch range is in ch1-ch{},'.format(ch_number)
             msg += ' while ch{} is given.'.format(ch)
-            raise InvalidChOutputrangeError(msg)
+            raise InvalidChRangeError(msg)
         return
 
     def _verify_sampling_outputrange(self, outputrange='DA0_100mA'):
@@ -170,18 +167,18 @@ class pci340516_driver(core.interface_driver):
             msg = 'Sampling outputrange is {0} or {1.}'.format(*outputrange_list)
             raise InvalidSamplingOutputrangeError(msg)
         return
-
+    
     def _verify_current(self, current=0., outputrange='DA0_100mA'):
         if outputrange == outputrange_list[0]:
             if 0. <= current <= 1.: pass
             else:
-                msg = 'Output outputrange is {},'.format(outputrange)
+                msg = 'Output range is {},'.format(outputrange)
                 msg += ' while {}mA is given.'.format(current)
                 raise InvalidCurrentError(msg)
         elif outputrange == outputrange_list[1]:
             if 0. <= current <= 100.: pass
             else:
-                msg = 'Output outputrange is {},'.format(single_outputrange)
+                msg = 'Output range is {},'.format(single_outputrange)
                 msg += ' while {}mA is given.'.format(current)
                 raise InvalidCurrentError(msg)
         return
@@ -207,7 +204,7 @@ class pci340516_driver(core.interface_driver):
         ---------
         ch : int
             取得する電流出力レンジのチャンネルを指定します（範囲: 1 -- 8）
-
+        
         Returns
         -------
         dict
@@ -238,17 +235,17 @@ class pci340516_driver(core.interface_driver):
         """
         bar = 0
         offset = 0x06
-        flags_list = self.bit_flags_out[0][offset]
+        flags_list = self.bit_flags_out[bar][offset]
 
         self._verify_ch(ch)
         self._verify_sampling_outputrange(outputrange)
         flags = flags_list[not(outputrange_list.index(outputrange))]
-
+        
         self._select_ch(ch)
         self.set_flag(bar, offset, flags)
         return
 
-
+    
     def get_onoff(self, ch=1):
         """電流出力 接続/遮断を取得します
 
@@ -256,7 +253,7 @@ class pci340516_driver(core.interface_driver):
         ---------
         ch : int
             取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 8）
-
+        
         Returns
         -------
         dict
@@ -279,7 +276,7 @@ class pci340516_driver(core.interface_driver):
         ---------
         ch : int
             取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 8）
-        onoff : 0（遮断） -- 1（接続）
+        onoff : 0（接続） -- 1（遮断）
             設定する電流出力 接続/遮断を指定します
         """
         bar = 0
@@ -289,19 +286,19 @@ class pci340516_driver(core.interface_driver):
 
         self._verify_ch(ch)
         self._verify_onoff(onoff)
-
+        
         def calbit(a, b):
             return (not(a) and b) or (a and b)
-
+        
         change_onoff = current_onoff.copy()
         change_onoff[ch-1] = onoff
         target_onoff = [calbit(i, j) for i, j in zip(current_onoff, change_onoff)]
         self.write(bar, offset, core.list2bytes(target_onoff))
         time.sleep(1 * 10 ** (-3))
         return
+    
 
-
-    def output_current(self, ch=1, current=0., outputrange='DA0_100mA'):
+    def output_current(self, ch=1, current=0.):
         """電流出力をします （Main Method）
 
         Prameters
@@ -312,18 +309,13 @@ class pci340516_driver(core.interface_driver):
             出力する電流の値を指定します
               - 'DA0_1mA'   のとき、0. -- 1.
               - 'DA0_100mA' のとき、0. -- 100.
-        outputrange : str
-            設定する電流出力レンジを指定します
-              - 'DA0_1mA'
-              - 'DA0_100mA' (default)
         """
         bar = 0
-        size_ch = 1
-        size_cur = 2
         offset_ch = 0x02
         offset_current = 0x00
 
         self._verify_ch(ch)
+        outputrange = self.get_outputrange(ch)['ch{}'.format(ch)]
         self._verify_sampling_outputrange(outputrange)
         self.set_outputrange(ch, outputrange)
         self._verify_current(current, outputrange)
@@ -333,12 +325,13 @@ class pci340516_driver(core.interface_driver):
         self.write(bar, offset_ch, core.list2bytes(self._ch2list(ch)))
         self.write(bar, offset_current, core.list2bytes(self._current2list(current, outputrange)))
         self._set_sampling_config('all_output')
-        return
+        print('[OUTPUT INFO] CH:{ch} Range:{ouputrange} Current:{current}'.format(**locals()))
+        return 
 
-
+    
     def finalize(self):
         """電流出力を全チャンネル遮断します
         None
         """
-        [self.set_onoff(_) for _ in range(1, ch_number + 1)]
+        [self.set_onoff(_, 0) for _ in range(1, ch_number + 1)]
         return

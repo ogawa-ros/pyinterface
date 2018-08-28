@@ -1,21 +1,18 @@
 
-
+import time
 import struct
-from . import core
+import core
+# from . import core
 
 
+ad_mode = {'single':64, 'diff':32}
 
 
 class InvalidChError(Exception):
     pass
 
-
-
-
 class InvalidModeError(Exception):
     pass
-
-
 
 
 class pci3177_driver(core.interface_driver):
@@ -61,6 +58,7 @@ class pci3177_driver(core.interface_driver):
             ('', '', '', '', '', '', '', '')
         )
     )
+
     
     bit_flags_out = (
         (
@@ -106,23 +104,54 @@ class pci3177_driver(core.interface_driver):
     )
 
 
-
-
     def get_board_id(self):
         bar = 0
         offset = 0x17
         size = 1
 
-
         ret = self.read(bar, offset, size)
         bid = ret.to_hex()[1]
 
-
         return bid
 
+    def _ch2list(self, ch=1):
+        if ch == 0: return []
+        else:
+            bit_ch = bin(ch-1).replace('0b', '0' * (8 - (len(bin(ch - 1)) - 2)))
+            bit_list = [bit_ch[i] for i in range(len(bit_ch))]
+            bit_list.reverse()
 
+            return bit_list        
+    
+    def _verify_mode(self, mode):
+        mode_list = list(ad_mode.keys())
+        if mode in mode_list: pass
+        else:
+            msg = 'Mode must be single or diff,'
+            msg += ' while {0} is given.'.format(mode)
+            raise InvalidModeError(msg)
+        return
 
+    def _verify_ch(self, ch=1, mode='single'):
+        if ch in [_ for _ in range(1, ad_mode['{}'.format(mode)] + 1)]: pass
+        else:
+            msg = 'Ch range is in ch1 -- ch{},'.format(ad_mode['{}'.format(mode)])
+            msg += ' while ch{} is given.'.format(ch)
+            raise InvalidChError(msg)
+        return
 
+    def _list2voltage(self, voltage_list): # support ± 10 V
+        voltage_range = 10
+        resolution = 12
+        resolution_int = 2 ** resolution
+
+        voltage_int = int.from_bytes(core.list2bytes(voltage_list), 'little')
+        voltage = -voltage_range * (voltage_range / (resolution_int / 2)) * voltage_int
+
+        return voltage
+
+    
+    '''                                                 
     def _verify_mode(self, mode):
         mode_list = ['single', 'diff']
         if mode in mode_list: pass
@@ -279,7 +308,7 @@ class pci3177_driver(core.interface_driver):
         ch = [self.input_ad('ch{0}'.format(i)) for i in range(ch_initial, ch_final+1)]
         
         return ch
-
+'''
 
 # History
 # -------

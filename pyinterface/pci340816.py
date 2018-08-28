@@ -2,27 +2,18 @@
 
 import time
 import struct
-from . import core
+import core
+# from . import core
 
 
-
-
-class InvalidChTypeError(Exception):
-    pass
-
-
+ch_number = 16
 
 
 class InvalidChRangeError(Exception):
     pass
 
-
-
-
 class InvalidVoltageError(Exception):
     pass
-
-
 
 
 class pci340816_driver(core.interface_driver):
@@ -107,231 +98,116 @@ class pci340816_driver(core.interface_driver):
         offset = 0x17
         size = 1
 
-
         ret = self.read(bar, offset, size)
         bid = ret.to_hex()[1]
 
-
         return bid
 
-
-
-
-    def _verify_voltage(self, voltage=0.0):
-        vol_limit = 10
-        if abs(voltage) <= vol_limit: pass
-        else:
-            msg = 'Voltage must be in -{0}[V] - {1}[V] '.format(-vol_limit, vol_limit)
-            msg += 'while {0}[V] is given.'.format(voltage)
-            raise InvalidVoltageError(msg)
-
-
-        return voltage
-
-
-
-
-    def _verify_ch(self, ch=''):
-        ch_lim_initial = 1
-        ch_lim_final = 16
-
-
-        if ch.find('-') == -1:
-            msg = 'Ch type must be chx-chy absolutelly '
-            msg += 'while {0} is given.'.format(ch)
-            raise InvalidChTypeError(msg)
-        
-        ch_ = ch.split('-')
-        if len(ch_) == 2: pass
-        else :
-            msg = 'Ch type must be chx-chy absolutelly '
-            msg += 'while {0} is given.'.format(ch)
-            raise InvalidChTypeError(msg)
-            
-        ch_initial, ch_final = int(ch_[0].replace('ch', '')), int(ch_[1].replace('ch', ''))
-        if 1 <= ch_initial < ch_final <= 16: pass
-        else:
-            msg = 'Ch range is in ch{0} - ch{1} '.format(ch_lim_initial, ch_lim_final)
-            msg = 'while ch{0} - ch{1} is given.'.format(ch_initial, ch_final)
-            raise InvalidChRangeError(msg)
-            
-        ch = [i for i in range(ch_initial, ch_final+1)]
-
-
-        return ch
-
-
-
-
-    def _voltage2list(self, voltage=0.0):
-        voltage = float(voltage)
-        vol_range = 10.0
-        res = 16.0
-        res_int = 2**res
-        
-        if voltage == 10.0: bytes_v = int(res_int - 1)
-        else: bytes_v = int((voltage + vol_range)/(vol_range/(res_int/2)))
-        bytes_v = int((voltage + vol_range)/(vol_range/(res_int/2)))
-        bit_ = bin(bytes_v).replace('0b', '0'*(16-(len(bin(bytes_v))-2)))
-        bit_list = [int(bit_[i]) for i in range(len(bit_))]
-        bit_list.reverse()
-
-
-        return bit_list
-
-
-
-
-    def _set_sampling_config(self, mode=''):
+    def _select_ch(self, ch=1):
         bar = 0
-        offset = 0x05
+        offset = 0x02
+        flags_list = self.bit_flags_out[0][offset]
 
-
-        if mode == 'all_vout_disable': mode = ''
-        elif mode == 'all_vout': mode = 'MD0'
-        elif mode == 'all_vout_clear': mode = 'MD1'
-        elif mode == 'all_vout_enable': mode = 'MD0 MD1'
-
-
-        flags = mode
-
+        ch = self._ch2list(ch)[0:4]
+        flags_list = [j + ' ' for i, j in zip(ch, flags_list) if i == '1']
+        flags = ''.join(map(str, flags_list))[:-1]
 
         self.set_flag(bar, offset, flags)
-        return
+        time.sleep(1 * 10 ** (-3))
+        return flags
 
-
-
-
-    def _ch2bit(self, ch=''):
-        if ch == '': return b''
+    def _ch2list(self, ch=1):
+        if ch == 0: return []
         else:
-            ch = int(ch.replace('ch', ''))
-            ch = bin(ch-1).replace('0b', '0'*(8-(len(bin(ch-1))-2)))
-            bit_list = [int(ch[i]) for i in range(len(ch))]
+            bit_ch = bin(ch-1).replace('0b', '0' * (8 - (len(bin(ch - 1)) - 2)))
+            bit_list = [bit_ch[i] for i in range(len(bit_ch))]
             bit_list.reverse()
-
 
             return bit_list
 
+    def _voltage2list(self, voltage=0.0):
+        voltage_outputrange = 10.
+        resolution = 16
+        resolution_int = 2 ** resolution
+        
+        if voltage == voltage_outputrange: bytes_voltage = int(resolution_int - 1)
+        else: bytes_voltage = int((voltage + voltage_outputrange) / (voltage_outputrange / (resolution_int / 2)))
 
+        bit = bin(bytes_voltage).replace('0b', '0' * (16 - (len(bin(bytes_voltage)) - 2)))
+        bit_list = [int(bit[i]) for i in range(len(bit))]
+        bit_list.reverse()
 
+        return bit_list
 
-    def _da_onoff(self, onoff=0):
+    def _verify_ch(self, ch=1):
+        if ch in range(1, ch_number + 1): pass
+        else:
+            msg = 'Ch range is in ch1-ch{},'.format(ch_number)
+            msg += ' while ch{} is given.'.format(ch)
+            raise InvalidChRangeError(msg)
+        return
+
+    def _verify_voltage(self, voltage=0.):
+        if -10. <= voltage <= 10.: pass
+        else:
+            msg = 'Output range is -10V -- 10V,'
+            msg += ' while {}V is given.'.format(voltage)
+            raise InvalidVoltageError(msg)
+        return
+    
+    def _set_sampling_config(self, config=''):
         bar = 0
-        offset = 0x1b
+        offset = 0x05
 
-
-        if onoff == 0: onoff_ = ''
-        if onoff == 1: onoff_ = 'AO'
-
-
-        flags = onoff_
-
-
+        if config == 'all_output_disable': config = ''
+        elif config == 'all_output': config = 'MD0'
+        elif config == 'all_output_clear': config = 'MD1'
+        elif config == 'all_output_enable': config = 'MD0 MD1'
+        
+        flags = config
         self.set_flag(bar, offset, flags)
         return
 
-
-
-
-    def _da_output(self, ch='', voltage=0.0):
+    def _set_onoff(self, onoff=1):
         bar = 0
-        size_ch = 1
-        size_vol = 2
-        offset_ch = 0x02
-        offset_vol = 0x00
+        offset = 0x1b
+        flags_list = self.bit_flags_out[bar][offset]
+
+        flags = flags_list[not(onoff)]
+
+        self.set_flag(bar, offset, flags)
+        time.sleep(1 * 10 ** (-3))
+        return flags
 
 
-        data_ch = self._ch2bit(ch=ch)
-        new_d_ch = core.list2bytes(data_ch)
-        self.write(bar, offset_ch, new_d_ch)
+    def output_voltage(self, ch=1, voltage=0.):
+        """電圧出力をします （Main Method）
 
-
-        data_vol = self._voltage2list(voltage=voltage)
-        new_d_vol = core.list2bytes(data_vol)
-        self.write(bar, offset_vol, new_d_vol)
-        return
-
-
-
-
-    def _start_sampling(self):
-        self._set_sampling_config(mode='all_vout')
-
-
-    
-    def output_da(self, ch='', voltage=0.0):
+        Prameters
+        ---------
+        ch : int
+            取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 16）
+        voltage : float
+            出力する電流の値を指定します（範囲: -10. -- 10）
+        """
         bar = 0
-        size = 2
         offset = 0x00
 
+        self._verify_ch(ch)
+        self._verify_voltage(voltage)
 
-        ch_ = self._verify_ch(ch=ch)
-        voltage = self._verify_voltage(voltage=voltage)
-        self._set_sampling_config(mode='all_vout_enable')
-        self._da_onoff(onoff=1)
-        time.sleep(0.01)
-        
-        for i in range(len(ch_)):
-            self._da_output('ch{0}'.format(i+1), voltage)
+        self._set_sampling_config('all_output_disable')
+        self._set_onoff(onoff=1)
+        self._select_ch(ch)
+        self.write(bar, offset, core.list2bytes(self._voltage2list(voltage)))
 
-
-        self._start_sampling()
-        time.sleep(0.01)
-        return
-
-
-    
-    def _verify_ch_sim(self, ch=''):
-        ch_lim_initial = 1
-        ch_lim_final = 16
-
-
-        if ch in ['ch{}'.format(i) for i in range(ch_lim_initial,ch_lim_final+1)]:
-            pass
-        else:
-            msg = 'Ch range is in ch{0} - ch{1} '.format(ch_lim_initial, ch_lim_final)
-            msg = 'while {0} is given.'.format(ch)
-            raise InvalidChRangeError(msg)
-            
-        return ch
-
-
-    
-    def output_da_sim(self, ch='', voltage=0.0):
-        bar = 0
-        size = 2
-        offset = 0x00
-
-
-        ch_ = self._verify_ch_sim(ch=ch)
-        voltage = self._verify_voltage(voltage=voltage)
-        self._set_sampling_config(mode='all_vout_enable')
-        self._da_onoff(onoff=1)
-        time.sleep(0.01)
-
-
-        self._da_output(ch_, voltage)
-
-
-        self._start_sampling()
-        time.sleep(0.01)
-        return
-
-
-    
-    def initialize(self):
-        self._da_onoff(onoff=1)
-        self._set_sampling_config('all_vout_clear')
-
-
+        # print('[OUTPUT INFO] CH:{ch} Voltage:{voltage:.2f}V'.format(**locals()))
+        return 
 
 
     def finalize(self):
-        self._set_sampling_config('all_vout_clear')
-        self._da_onoff(onoff=0)
-
-
-# History
-# -------
-# written by K.Sakasai
+        """電圧出力を全チャンネル遮断します
+        None
+        """        
+        self._set_sampling_config('all_output_clear')
+        return
