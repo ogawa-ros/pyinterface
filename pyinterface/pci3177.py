@@ -1,8 +1,7 @@
 
 import time
 import struct
-import core
-# from . import core
+from . import core
 
 
 ad_mode = {'single':64, 'diff':32}
@@ -59,7 +58,7 @@ class pci3177_driver(core.interface_driver):
         )
     )
 
-    
+
     bit_flags_out = (
         (
             ('', '', '', '', '', '', '', ''),
@@ -121,8 +120,8 @@ class pci3177_driver(core.interface_driver):
             bit_list = [bit_ch[i] for i in range(len(bit_ch))]
             bit_list.reverse()
 
-            return bit_list        
-    
+            return bit_list
+
     def _verify_mode(self, mode):
         mode_list = list(ad_mode.keys())
         if mode in mode_list: pass
@@ -150,7 +149,7 @@ class pci3177_driver(core.interface_driver):
 
         return voltage
 
-    
+
     '''                                                 
     def _verify_mode(self, mode):
         mode_list = ['single', 'diff']
