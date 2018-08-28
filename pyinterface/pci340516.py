@@ -164,11 +164,7 @@ class pci340516_driver(core.interface_driver):
     def _verify_outputrange(self, outputrange='DA0_100mA'):
         if outputrange in outputrange_list: pass
         else:
-<<<<<<< HEAD
-            msg = 'Sampling outputrange is {0} or {1}.'.format(*outputrange_list)
-=======
-            msg = 'Outputrange is {0} or {1}'.format(*outputrange_list)
->>>>>>> ceeda959daa59881ccd6ae8013d1717acc842bc9
+            msg = 'Outputrange is {0} or {1}.'.format(*outputrange_list)
             raise InvalidOutputrangeError(msg)
         return
 
