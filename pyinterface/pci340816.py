@@ -2,14 +2,13 @@
 
 import time
 import struct
-import core
-# from . import core
+from . import core
 
 
 ch_number = 16
 
 
-class InvalidChRangeError(Exception):
+class InvalidChError(Exception):
     pass
 
 class InvalidVoltageError(Exception):
@@ -90,7 +89,7 @@ class pci340816_driver(core.interface_driver):
             ('IN1', 'IN2', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', '')
         ),
-    )        
+    )
 
 
     def get_board_id(self):
@@ -129,7 +128,7 @@ class pci340816_driver(core.interface_driver):
         voltage_outputrange = 10.
         resolution = 16
         resolution_int = 2 ** resolution
-        
+
         if voltage == voltage_outputrange: bytes_voltage = int(resolution_int - 1)
         else: bytes_voltage = int((voltage + voltage_outputrange) / (voltage_outputrange / (resolution_int / 2)))
 
@@ -144,7 +143,7 @@ class pci340816_driver(core.interface_driver):
         else:
             msg = 'Ch range is in ch1-ch{},'.format(ch_number)
             msg += ' while ch{} is given.'.format(ch)
-            raise InvalidChRangeError(msg)
+            raise InvalidChError(msg)
         return
 
     def _verify_voltage(self, voltage=0.):
@@ -154,7 +153,7 @@ class pci340816_driver(core.interface_driver):
             msg += ' while {}V is given.'.format(voltage)
             raise InvalidVoltageError(msg)
         return
-    
+
     def _set_sampling_config(self, config=''):
         bar = 0
         offset = 0x05
@@ -163,7 +162,7 @@ class pci340816_driver(core.interface_driver):
         elif config == 'all_output': config = 'MD0'
         elif config == 'all_output_clear': config = 'MD1'
         elif config == 'all_output_enable': config = 'MD0 MD1'
-        
+
         flags = config
         self.set_flag(bar, offset, flags)
         return
@@ -188,7 +187,7 @@ class pci340816_driver(core.interface_driver):
         ch : int
             取得する電流出力 接続/遮断のチャンネルを指定します（範囲: 1 -- 16）
         voltage : float
-            出力する電流の値を指定します（範囲: -10. -- 10）
+            出力する電流の値を指定します（範囲: -10. -- 10.）
         """
         bar = 0
         offset = 0x00
@@ -202,12 +201,12 @@ class pci340816_driver(core.interface_driver):
         self.write(bar, offset, core.list2bytes(self._voltage2list(voltage)))
 
         # print('[OUTPUT INFO] CH:{ch} Voltage:{voltage:.2f}V'.format(**locals()))
-        return 
+        return
 
 
     def finalize(self):
         """電圧出力を全チャンネル遮断します
         None
-        """        
+        """
         self._set_sampling_config('all_output_clear')
         return
