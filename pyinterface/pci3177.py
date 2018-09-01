@@ -62,7 +62,7 @@ class pci3177_driver(core.interface_driver):
         )
     )
 
-    
+
     bit_flags_out = (
         (
             ('', '', '', '', '', '', '', ''),
@@ -124,8 +124,8 @@ class pci3177_driver(core.interface_driver):
             bit_list = [bit_ch[i] for i in range(len(bit_ch))]
             bit_list.reverse()
 
-            return bit_list        
-    
+            return bit_list
+
     def _verify_mode(self, mode):
         mode_list = list(ad_mode.keys())
         if mode in mode_list: pass
@@ -143,13 +143,17 @@ class pci3177_driver(core.interface_driver):
             raise InvalidChError(msg)
         return
 
+    def _verify_mode(self, mode):
+        mode_list = ['single', 'diff']
+        if mode in mode_list: pass
+
     def _verify_inputrange(self, inputrange='DA-10_10V'):
         if inputrange in inputrange_list: pass
         else:
             msg = 'Inputrange is {0}.'.format(inputrange_list)
             raise InvalidInputrangeError(msg)
         return
-    
+
     def _list2voltage(self, voltage_list, inputrange):
         voltage_range = float(inputrange.split('_')[-1].replace('V', ''))
         resolution = 12
@@ -167,7 +171,7 @@ class pci3177_driver(core.interface_driver):
 
             return voltage
         return
-        
+
     def _is_busy(self):
         bar = 0
         size = 1
@@ -243,7 +247,7 @@ class pci3177_driver(core.interface_driver):
         self._verify_mode(mode)
         self._verify_ch(ch, mode)
         self._verify_inputrange(inputrange)
-        
+
         self._set_sampling_mode(mode)
         self._start_sampling(ch)
         voltage = self._list2voltage(self.read(bar, offset, size).to_list(), inputrange)
