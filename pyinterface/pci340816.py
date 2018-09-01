@@ -2,9 +2,9 @@
 
 import time
 import struct
-from . import core
+ from . import core
 
-
+ 
 ch_number = 16
 
 
@@ -112,7 +112,7 @@ class pci340816_driver(core.interface_driver):
         flags = ''.join(map(str, flags_list))[:-1]
 
         self.set_flag(bar, offset, flags)
-        time.sleep(1 * 10 ** (-3))
+        time.sleep(1 * 10 ** (-2))
         return flags
 
     def _ch2list(self, ch=1):
@@ -175,7 +175,7 @@ class pci340816_driver(core.interface_driver):
         flags = flags_list[not(onoff)]
 
         self.set_flag(bar, offset, flags)
-        time.sleep(1 * 10 ** (-3))
+        time.sleep(1 * 10 ** (-2))
         return flags
 
 

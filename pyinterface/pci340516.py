@@ -119,7 +119,7 @@ class pci340516_driver(core.interface_driver):
         flags = ''.join(map(str, flags_list))[:-1]
 
         self.set_flag(bar, offset, flags)
-        time.sleep(1 * 10 ** (-3))
+        time.sleep(1 * 10 ** (-2))
         return
 
     def _ch2list(self, ch=1):
@@ -164,11 +164,8 @@ class pci340516_driver(core.interface_driver):
     def _verify_outputrange(self, outputrange='DA0_100mA'):
         if outputrange in outputrange_list: pass
         else:
-<<<<<<< HEAD
-            msg = 'Sampling outputrange is {0} or {1}.'.format(*outputrange_list)
-=======
+            msg = 'Outputrange is {0} or {1}.'.format(*outputrange_list)
             msg = 'Outputrange is {0} or {1}'.format(*outputrange_list)
->>>>>>> ceeda959daa59881ccd6ae8013d1717acc842bc9
             raise InvalidOutputrangeError(msg)
         return
 
@@ -311,7 +308,7 @@ class pci340516_driver(core.interface_driver):
         change_onoff[ch-1] = onoff
         target_onoff = [calbit(i, j) for i, j in zip(current_onoff, change_onoff)]
         self.write(bar, offset, core.list2bytes(target_onoff))
-        time.sleep(1 * 10 ** (-3))
+        time.sleep(1 * 10 ** (-2))
         return
 
 

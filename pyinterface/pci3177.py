@@ -250,5 +250,5 @@ class pci3177_driver(core.interface_driver):
 
         if mode == 'single': pass
         elif mode == 'diff': voltage = voltage / 2
-        
+
         return voltage
