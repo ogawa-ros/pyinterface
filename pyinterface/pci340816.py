@@ -2,7 +2,7 @@
 
 import time
 import struct
- from . import core
+from . import core
 
  
 ch_number = 16
