@@ -179,7 +179,7 @@ class pci340516_driver(core.interface_driver):
         elif outputrange == outputrange_list[1]:
             if 0. <= current <= 100.: pass
             else:
-                msg = 'Output range is {},'.format(single_outputrange)
+                msg = 'Output range is {},'.format(outputrange)
                 msg += ' while {}mA is given.'.format(current)
                 raise InvalidCurrentError(msg)
         return
@@ -340,7 +340,7 @@ class pci340516_driver(core.interface_driver):
         self.write(bar, offset_current, core.list2bytes(self._current2list(current, outputrange)))
         self._set_sampling_config('all_output')
 
-        print('[OUTPUT INFO] CH:{ch} Range:{ouputrange} Current:{current}'.format(**locals()))
+        print('[OUTPUT INFO] CH:{ch} Range:{outputrange} Current:{current}mA'.format(**locals()))
         return
 
 
