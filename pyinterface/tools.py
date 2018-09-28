@@ -10,6 +10,7 @@ from . import pci3177
 from . import pci3342
 from . import pci340816
 from . import pci340516
+from . import pci7415v
 
 interface_vendor_id = 0x1147
 
@@ -83,4 +84,13 @@ def open(board_name, board_id):
             pass
 
         continue
+
+        if board_name == 7415:
+            b = pci7415v.pci7415v_driver(board)
+            if b.board_id == board_id:
+                return b
+            pass
+
+        continue
+
 
