@@ -9,7 +9,7 @@ from . import core
 def to_prmv_format(x):
     data = []
     for i in range(len(x)):
-        a = x[i] & 0xfffffff
+        a = int(x[i]) & 0xfffffff
         data.append(struct.pack('<I', a))
     return data
 
@@ -488,5 +488,3 @@ class pci7415v_driver(core.interface_driver):
         for i in range(len(axis)):
             data[i] = data[i].to_bit()
         return data
-
-
