@@ -1,4 +1,7 @@
 
+"""
+PCI/CPZ-2702 DIO ボードのドライバです。
+"""
 
 import struct
 from . import core
@@ -119,7 +122,7 @@ class pci2702_driver(core.interface_driver):
         if (start < 1) or (start+num > io_number+1):
             msg = 'I/O number must be in 1-{0},'.format(io_number)
             msg += ' while {0}-{1} is given.'.format(start, start+num-1)
-            raise InvalidIoNumberError(msg)
+            raise ValueError(msg)
         return
     
     

@@ -38,7 +38,7 @@ def open(board_name, board_id):
         if board_name == 2724:
             b = pci2724.pci2724_driver(board)
             if b.board_id == board_id:
-                return b
+                return gpg2000.gpg2000(b)
             pass
         
         if board_name == 3165:
