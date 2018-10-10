@@ -112,7 +112,7 @@ class pci2724_driver(core.interface_driver):
     
     
     def input_point(self, start, num):
-        self._verify_io_number_access(start, num)
+        self._verify_io_number_access(start, num, self.num_input)
         inp = self.input_dword('IN1_32')
         bits = inp.to_list()[start-1:start+num-1]
         return bits
@@ -123,7 +123,7 @@ class pci2724_driver(core.interface_driver):
         offset = 0x00
         
         num = len(data)
-        self._verify_io_number_access(start, num)
+        self._verify_io_number_access(start, num, self.num_output)
         new_d = self.log_bytes_out[0][0:4]
         new_d = core.bytes2list(new_d)
         new_d[start-1:start+num-1] = data
