@@ -14,63 +14,63 @@
     - 公式ドライバの対応する関数
     - 機能
   
-  * - `initialize() <#pyinterface.pci2724.pci2724_driver.initialize>`_
+  * - `initialize() <#pyinterface.gpg2000.gpg2000.initialize>`_
     - DioOpen
     - ボードを初期化します
 
-  * - `input_point(start, num) <#pyinterface.pci2724.pci2724_driver.input_point>`_
+  * - `input_point(start, num) <#pyinterface.gpg2000.gpg2000.input_point>`_
     - DioInputPoint
     - デジタル入力を任意点数取得します
 
-  * - `input_byte(range_) <#pyinterface.pci2724.pci2724_driver.input_byte>`_
+  * - `input_byte(range_) <#pyinterface.gpg2000.gpg2000.input_byte>`_
     - DioInputByte
     - デジタル入力を1byte単位で取得します
 
-  * - `input_word(range_) <#pyinterface.pci2724.pci2724_driver.input_word>`_
+  * - `input_word(range_) <#pyinterface.gpg2000.gpg2000.input_word>`_
     - DioInputWord
     - デジタル入力を2byte単位で取得します
 
-  * - `input_dword() <#pyinterface.pci2724.pci2724_driver.input_dword>`_
+  * - `input_dword() <#pyinterface.gpg2000.gpg2000.input_dword>`_
     - DioInputDword
     - デジタル入力を4byte単位で取得します
 
-  * - `output_point(data, start) <#pyinterface.pci2724.pci2724_driver.output_point>`_
+  * - `output_point(data, start) <#pyinterface.gpg2000.gpg2000.output_point>`_
     - DioOutputPoint
     - デジタル出力を任意点数設定します
 
-  * - `output_byte(range_) <#pyinterface.pci2724.pci2724_driver.output_byte>`_
+  * - `output_byte(range_) <#pyinterface.gpg2000.gpg2000.output_byte>`_
     - DioOutputByte
     - デジタル出力を1byte単位で設定します
 
-  * - `output_word(range_) <#pyinterface.pci2724.pci2724_driver.output_word>`_
+  * - `output_word(range_) <#pyinterface.gpg2000.gpg2000.output_word>`_
     - DioOutputWord
     - デジタル出力を2byte単位で設定します
 
-  * - `output_dword() <#pyinterface.pci2724.pci2724_driver.output_dword>`_
+  * - `output_dword() <#pyinterface.gpg2000.gpg2000.output_dword>`_
     - DioOutputDword
     - デジタル出力を4byte単位で設定します
  
-  * - `set_latch_status(enable) <#pyinterface.pci2724.pci2724_driver.set_latch_status>`_
+  * - `set_latch_status(enable) <#pyinterface.gpg2000.gpg2000.set_latch_status>`_
     - DioSetLatchStatus
     - ラッチ回路の接続を設定します
 
-  * - `get_latch_status() <#pyinterface.pci2724.pci2724_driver.get_latch_status>`_
+  * - `get_latch_status() <#pyinterface.gpg2000.gpg2000.get_latch_status>`_
     - DioGetLatchStatus
     - ラッチ回路の接続状態を取得します
 
-  * - `get_ack_status() <#pyinterface.pci2724.pci2724_driver.get_ack_status>`_
+  * - `get_ack_status() <#pyinterface.gpg2000.gpg2000.get_ack_status>`_
     - DioGetAckStatus
     - ACK2, STB2 端子の接続状態を取得します
 
-  * - `set_ack_pulse_command(ack, pulse) <#pyinterface.pci2724.pci2724_driver.set_ack_pulse_command>`_
+  * - `set_ack_pulse_command(ack, pulse) <#pyinterface.gpg2000.gpg2000.set_ack_pulse_command>`_
     - DioSetAckPulseCommand
     - ACK1, PULS.OUT1 の出力制御を設定します
 
-  * - `get_stb_status() <#pyinterface.pci2724.pci2724_driver.get_stb_status>`_
+  * - `get_stb_status() <#pyinterface.gpg2000.gpg2000.get_stb_status>`_
     - DioGetStbStatus
     - STB1, ACK1 端子の接続状態を取得します
 
-  * - `set_stb_pulse_command(stb, pulse) <#pyinterface.pci2724.pci2724_driver.set_stb_pulse_command>`_
+  * - `set_stb_pulse_command(stb, pulse) <#pyinterface.gpg2000.gpg2000.set_stb_pulse_command>`_
     - DioSetStbPulseCommand
     - STB2, PULS.OUT2 の出力制御を設定します
 
