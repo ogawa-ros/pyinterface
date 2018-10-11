@@ -2,6 +2,7 @@
 import pypci
 
 from . import gpg2000
+from . import gpg6204
 
 from . import pci2702
 from . import pci2724
@@ -76,7 +77,7 @@ def open(board_name, board_id):
         if board_name == 6204:
             b = pci6204.pci6204_driver(board)
             if b.board_id == board_id:
-                return b
+                return gpg6204.gpg6204(b)
             pass
 
         if board_name == 7204:
