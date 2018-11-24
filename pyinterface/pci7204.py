@@ -131,8 +131,8 @@ class pci7204_driver(core.interface_driver):
         self.set_base_clock(axis=axis)
         self.ppmc_init(axis=axis)
         self.set_pulse_out(axis=axis)
-        self.set_limit_config('MASK', config='', axis=1)
-        self.set_limit_config('LOGIC', config='', axis=1)
+        self.set_limit_config('MASK', config='', axis=axis)
+        self.set_limit_config('LOGIC', config='', axis=axis)
         self.set_counter(0, axis=axis)
         self.output_do([0,0,0,0], axis=axis)
         self.motion_config[axis-1] = {'JOG': {}, 'PTP': {}}
@@ -155,7 +155,7 @@ class pci7204_driver(core.interface_driver):
         while (time.time() - t0) < timeout:
             if self.ppmc_is_readable(axis):
                 break
-            time.sleep(0.001)
+            time.sleep(0.0005)
             continue
         else:
             raise Exception('PPMC data register is busy')
@@ -186,7 +186,7 @@ class pci7204_driver(core.interface_driver):
         while (time.time() - t0) < timeout:
             if self.ppmc_is_writable(axis):
                 break
-            time.sleep(0.001)
+            time.sleep(0.0005)
             continue
         else:
             raise Exception('PPMC data register is busy')
@@ -205,9 +205,10 @@ class pci7204_driver(core.interface_driver):
         
         t0 = time.time()
         while (time.time() - t0) < timeout:
-            if self.ppmc_is_writable(axis) & self.ppmc_is_command_ready(axis):
+            status = self.ppmc_read_status(axis)
+            if status['IBF'] & status['IST']:
                 break
-            time.sleep(0.001)
+            time.sleep(0.0005)
             continue
         else:
             raise Exception('PPMC command register is busy')
@@ -236,6 +237,7 @@ class pci7204_driver(core.interface_driver):
         
         self.ppmc_write_command(cmd, axis)
         ret = self.ppmc_read_data(axis)
+        ret.set_flag([['FNS', 'CMD', 'ORG', '-SD', '+SD', '-EL', '+EL', 'ALM']])
         return ret
     
     def ppmc_get_error(self, axis=1):
@@ -272,7 +274,7 @@ class pci7204_driver(core.interface_driver):
         
         self.ppmc_write_command(cmd, axis)
         ret = self.ppmc_read_data(axis)
-        ret.set_flag([['FHL', 'FL', 'BHL', 'BL', 'ORG', 'ALM', 'RUN', '']])
+        ret.set_flag([['+SD', '+EL', '-SD', '-EL', 'ORG', 'ALM', 'RUN', '']])
         return ret        
     
     def ppmc_get_aux_in(self, axis=1):
@@ -495,8 +497,12 @@ class pci7204_driver(core.interface_driver):
         elif bclock == 'CLOCK_1_16M': return (1/16)*1e6
         return 0
 
+
+    def set_pulse_out(self, mode, config, axis=1):
+        pulse, logic = config.split(' ')
+        return self._set_pulse_out(pulse, logic, axis)
     
-    def set_pulse_out(self, pulse='CW/CCW', logic='N', axis=1):
+    def _set_pulse_out(self, pulse='CW/CCW', logic='N', axis=1):
         """
         pulse : 
             'CW/CCW' or 'OUT/DIR'
@@ -519,7 +525,7 @@ class pci7204_driver(core.interface_driver):
         return
     
     
-    def get_pulse_out(self, axis=1):
+    def get_pulse_out(self, mode, axis=1):
         self._verify_axis_num(axis)
         bar = axis
         offset = 0x0a
@@ -648,10 +654,17 @@ class pci7204_driver(core.interface_driver):
         return
         
     
-    def single_step(self, direction='cw', axis=1):
+    def single_step(self, direction='CW', axis=1):
         self._verify_axis_num(axis)
+
+        if type(direction) in [int, float]:
+            if direction > 0: direction = 'CW'
+            elif direction < 0: direction = 'CCW'
+            msg = "direction must be +1 or -1"
+            msg += ', not {0}'.format(direction)
+            raise TypeError(msg)
         
-        if direction not in ['cw', 'ccw']:
+        if direction not in ['CW', 'CCW']:
             msg = "direction must be 'cw' or 'ccw'"
             msg += ', not {0}'.format(direction)
             raise TypeError(msg)
@@ -673,7 +686,7 @@ class pci7204_driver(core.interface_driver):
         return
         
     
-    def change_speed(self, speed, axis=1):
+    def change_speed(self, speed, mode, axis=1):
         self._verify_axis_num(axis)
         
         bclock = self.get_base_clock_hz(axis)
@@ -691,45 +704,70 @@ class pci7204_driver(core.interface_driver):
         self.ppmc_set_speed(pulse_rate, axis)
         return
         
-        
-    def get_status(self, axis=1):
+    
+    def get_status(self, mode, axis=1):
         self._verify_axis_num(axis)
+
+        if mode in ['BUSY', 'ALL']:
+            status = self.ppmc_read_status(axis)
+            busy = status['BUSY']
+        else:
+            busy = None
+            pass
         
-        busy = self.ppmc_is_busy(axis)
-        ilock = self.get_inter_lock()
-        error = self.ppmc_get_error(axis)
-        count = self.get_counter(axis)
+        if mode in ['INTERLOCK', 'ALL']:
+            ilock = self.get_inter_lock()
+        else:
+            ilock = None
+            pass
         
-        lstatus = self.ppmc_get_limit_status(axis)
-        sdp = lstatus['FHL']
-        sdm = lstatus['BHL']
-        elp = lstatus['FL']
-        elm = lstatus['BL']
-        org = lstatus['ORG']
-        alm = lstatus['ALM']
-        lstatus2_bytes = core.list2bytes([sdp, sdm, elp, elm, 0, org, alm, 0])
-        lstatus2_fb = core.flagged_bytes(lstatus2_bytes)
-        lstatus2_fb.set_flag([['+SD', '-SD', '+EL', '-EL', '', 'ORG', 'ALM', '']])
+        if mode in ['ERROR', 'ALL']:
+            error = self.ppmc_get_error(axis)
+        else:
+            error = None
+            pass
         
-        status = {'busy': busy,
+        #count = self.get_counter(axis)
+        count = None
+        
+        if mode in ['FINISH', 'ALL']:
+            fstatus = self.ppmc_get_stop_status(axis)
+        else:
+            fstatus = None
+            pass
+            
+        if mode in ['LIMIT', 'ALL']:
+            lstatus = self.ppmc_get_limit_status(axis)
+        else:
+            lstatus = None
+            pass
+            
+        status = {'ppmc_status': status,
+                  'busy': busy,
                   'interlock': ilock,
-                  'limit': lstatus2_fb,
+                  'finish': fstatus,
+                  'limit': lstatus,
                   'error': error,
-                  'count': count}
+                  'count': count,}
         return status
+
     
-    
-    def get_counter(self, axis=1):
+    def read_counter(self, axis=1):
         self._verify_axis_num(axis)
         
         count = self.ppmc_get_counter(axis)
         return count
     
         
-    def set_counter(self, count, axis=1):
+    def write_counter(self, count, axis=1):
         self._verify_axis_num(axis)
         
         self.ppmc_set_counter(count, axis)
+        return
+
+    
+    def clear_counter(self, axis=1):
+        self.write_coutner(0, axis)
         return
     
     
