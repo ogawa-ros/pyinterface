@@ -199,7 +199,7 @@ class pci2724_driver(core.interface_driver):
         return 
 
 
-    def output_dword(self, data):
+    def output_dword(self, range_, data):
         bar = 0
         offset = 0x00        
         self.write(bar, offset, data)

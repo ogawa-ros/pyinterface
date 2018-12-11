@@ -569,7 +569,7 @@ class gpg6204(object):
             d = struct.pack('<l', count)
             pass
             
-        return self.driver.set_counter(count, ch)
+        return self.driver.set_counter(d, ch)
     
 
     def get_counter(self, unsigned=True, ch=1):
@@ -659,7 +659,7 @@ class gpg6204(object):
             d = struct.pack('<l', count)
             pass
             
-        return self.driver.set_comparator(count, ch)
+        return self.driver.set_comparator(d, ch)
     
 
     def get_comparator(self, unsigned=True, ch=1):

@@ -76,6 +76,8 @@
 
 """
 
+from . import core
+
 class gpg2000(object):
     num_input = 0
     num_output = 0

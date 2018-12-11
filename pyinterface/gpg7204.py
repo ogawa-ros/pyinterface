@@ -196,7 +196,7 @@ class gpg7204(object):
         axis がボードの軸数を越す場合 ValueError となります。
         ボードの軸数は、num_axis に格納されています。        
         """
-        return self.driver.set_limit_cionfig(mode, config, axis)
+        return self.driver.set_limit_config(mode, config, axis)
 
     
     def set_motion(self, mode, acc_mode, low_speed, speed, acc, step, axis=1):

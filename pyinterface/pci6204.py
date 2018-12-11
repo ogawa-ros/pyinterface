@@ -119,7 +119,7 @@ class pci6204_driver(core.interface_driver):
     )
 
     available_ch = [1, 2]
-    latch = {1: 0, 2: 0}
+    latch_status = {1: 0, 2: 0}
     comparator = {1: 0, 2: 0}
     
     def get_board_id(self):
@@ -133,16 +133,16 @@ class pci6204_driver(core.interface_driver):
     
     
     def initialize(self):
-        self.set_counter(0, ch=1)
-        self.set_counter(0, ch=2)
-        self.set_comparator(-1, ch=1)
-        self.set_comparator(-1, ch=2)
+        self.set_counter(struct.pack('<l', 0), ch=1)
+        self.set_counter(struct.pack('<l', 0), ch=2)
+        self.set_comparator(struct.pack('<l', -1), ch=1)
+        self.set_comparator(struct.pack('<l', -1), ch=2)
         self.set_mode(ch=1)
         self.set_mode(ch=2)
         self.enable_count(ch=1)
         self.enable_count(ch=2)
-        self.set_z_mode(ch=1)
-        self.set_z_mode(ch=2)
+        self.set_z_mode('', '', '', '', ch=1)
+        self.set_z_mode('', '', '', '', ch=2)
         return
     
     
@@ -188,7 +188,7 @@ class pci6204_driver(core.interface_driver):
 
     
     def _set_latch(self, latch, ch):
-        self.latch[ch] = latch
+        self.latch_status[ch] = latch
         return
 
     
@@ -196,7 +196,7 @@ class pci6204_driver(core.interface_driver):
         m = self._get_mode(ch)
         l = self._get_latch(ch)
         ret = {
-            'mode': m.replace(' DIR', '').replace(' EQS', ''),
+            'mode': m.to_flags().replace(' DIR', '').replace(' EQS', ''),
             'direction': m['DIR'],
             'equal': m['EQS'],
             'latch': l,
@@ -209,15 +209,15 @@ class pci6204_driver(core.interface_driver):
         offset = self._get_offset_for(ch, 0x04)
         size = 1
         
-        return self.read(bar, offset, size).to_flags()
+        return self.read(bar, offset, size)
     
 
     def _get_latch(self, ch):
-        return self.latch[ch]
+        return self.latch_status[ch]
     
 
-    def set_z_mode(self,  clear_condition, latch_condition,
-                   z_polarity, l_polarity, ch):
+    def set_z_mode(self, clear_condition=None, latch_condition=None,
+                   z_polarity=None, l_polarity=None, ch=1):
         last = self.get_z_mode(ch)
         if clear_condition is None: clear_condition = last['clear_condition']
         if latch_condition is None: latch_condition = last['latch_condition']

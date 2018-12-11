@@ -130,10 +130,10 @@ class pci7204_driver(core.interface_driver):
         self.stop_motion(axis)
         self.set_base_clock(axis=axis)
         self.ppmc_init(axis=axis)
-        self.set_pulse_out(axis=axis)
+        self.set_pulse_out(None, 'CW/CCW N', axis=axis)
         self.set_limit_config('MASK', config='', axis=axis)
         self.set_limit_config('LOGIC', config='', axis=axis)
-        self.set_counter(0, axis=axis)
+        self.write_counter(0, axis=axis)
         self.output_do([0,0,0,0], axis=axis)
         self.motion_config[axis-1] = {'JOG': {}, 'PTP': {}}
         return
@@ -194,7 +194,7 @@ class pci7204_driver(core.interface_driver):
         self.write(bar, offset, data)
         return
         
-    def ppmc_write_command(self, data, axis=1, timeout=0.5):
+    def ppmc_write_command(self, data, axis=1, timeout=1):
         self._verify_axis_num(axis)
         bar = axis
         offset = 0x01
@@ -206,7 +206,7 @@ class pci7204_driver(core.interface_driver):
         t0 = time.time()
         while (time.time() - t0) < timeout:
             status = self.ppmc_read_status(axis)
-            if status['IBF'] & status['IST']:
+            if (not status['IBF']) & (not status['IST']):
                 break
             time.sleep(0.0005)
             continue

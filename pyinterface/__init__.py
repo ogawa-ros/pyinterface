@@ -1,8 +1,10 @@
 
 
-__version__ = '0.9.0'
+__version__ = '1.0.0'
 
 
-from .tools import open
-from .core import interface_driver
-
+try:
+    from .tools import open
+    from .core import interface_driver
+except:
+    pass
