@@ -77,6 +77,7 @@
 """
 
 from . import core
+import struct
 
 class gpg2000(object):
     num_input = 0
