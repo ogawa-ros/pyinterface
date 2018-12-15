@@ -110,8 +110,8 @@ class pci2702_driver(core.interface_driver):
 
     
     def initialize(self):
-        self.output_dword('OUT1_32', 0)
-        self.output_dword('OUT33_64', 0)
+        self.output_dword('OUT1_32', struct.pack('<i', 0))
+        self.output_dword('OUT33_64', struct.pack('<i', 0))
         self.set_latch_status()
         self.set_ack_pulse_command()
         self.set_stb_pulse_command()
