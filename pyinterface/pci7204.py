@@ -767,7 +767,7 @@ class pci7204_driver(core.interface_driver):
 
     
     def clear_counter(self, axis=1):
-        self.write_coutner(0, axis)
+        self.write_counter(0, axis)
         return
     
     
