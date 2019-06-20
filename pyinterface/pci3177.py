@@ -28,7 +28,7 @@ def decode_adbit(adbit, range_):
     else:
         raise Exception('wrong range_ : %s'%(range_))
     
-    ad_volt = adbit.to_int() * lsb - start
+    ad_volt = adbit.to_int() * lsb + start
     return ad_volt
     
 
