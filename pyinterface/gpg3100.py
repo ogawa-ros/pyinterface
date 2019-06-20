@@ -191,7 +191,7 @@ class gpg3100(object):
         
         Examples
         --------
-        >>> ad.set_sampling_config(1, [{'ch_no': 1, 'range': '0_1V'}], 'IO',
+        >>> ad.set_sampling_config([{'ch_no': 1, 'range': '0_1V'}], 'IO',
                                    'SINGLE', 1024, 0, 0.0, 'START', 'FREERUN',
                                    0, 1, 0.0, 0.0, 'DOWN', 'LOW', 'DOWN', 1,
                                    'NORMAL')
@@ -530,7 +530,7 @@ class gpg3100(object):
 
     def output_do(self, data):
         """DOを設定します
-        (GPG-3100 22. AdInputDO)
+        (GPG-3100 22. AdOutputDO)
         
         Parameters
         ----------
