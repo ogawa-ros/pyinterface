@@ -24,6 +24,11 @@
 class gpg3100(object):
     def __init__(self, driver):
         self.driver = driver
+        self.rswid = self.driver.get_board_id()
+        self.available_ranges = self.driver.available_ranges
+        self.available_ad_channel_num = self.driver.available_ad_channel_num
+        self.available_di_channel_num = self.driver.available_di_channel_num
+        self.available_do_channel_num = self.driver.available_do_channel_num
         pass
     
     
@@ -543,10 +548,10 @@ class gpg3100(object):
         
         Examples
         --------
-        >>> ad.input_do([0, 0, 1, 1])
+        >>> ad.output_do([0, 0, 1, 1])
 
         Exceptions
         ----------
         ...
         """
-        return self.driver.input_do(data)
+        return self.driver.output_do(data)

@@ -119,6 +119,17 @@ class pci3177_driver(core.interface_driver):
             ('U/D', 'INC', 'CS', '', '', '', '', '')
         )
     )
+
+    available_ranges = [
+        '0_5V',
+        '0_10V',
+        '2P5V',
+        '5V',
+        '10V',
+    ]
+    available_ad_channel_num = {'SINGLE': 64, 'DIFF': 32}
+    available_di_channel_num = 2
+    available_do_channel_num = 2
     
     _last_ch_no = -1
     _last_single_diff = ''
@@ -140,6 +151,9 @@ class pci3177_driver(core.interface_driver):
         return bid
     
     def initialize(self):
+        self.stop_sampling()
+        self.output_do([0, 0])
+        self.clear_sampling_data()
         self._set_default_sampling_config()
         return
     
@@ -161,7 +175,7 @@ class pci3177_driver(core.interface_driver):
             'atrg_pulse': 'LOW',
             'trig_edge': 'DOWN',
             'trig_di': 1,
-            'fast_mod': 'NORMAL',
+            'fast_mode': 'NORMAL',
         }
         return
     
@@ -188,7 +202,7 @@ class pci3177_driver(core.interface_driver):
             'atrg_pulse': atrg_pulse if atrg_pulse is not None else self.conf['atrg_pulse'],
             'trig_edge': trig_edge if trig_edge is not None else self.conf['trig_edge'],
             'trig_di': trig_di if trig_di is not None else self.conf['trig_di'],
-            'fast_mod': fast_mode if fast_mode is not None else self.conf['fast_mode'],
+            'fast_mode': fast_mode if fast_mode is not None else self.conf['fast_mode'],
         }
         return
             
@@ -196,6 +210,7 @@ class pci3177_driver(core.interface_driver):
         return self.conf
         
     def get_sampling_data(self, smpl_num):
+        self.smpl_count -= smpl_num
         return [self.buffer.pop(0) for i in range(smpl_num)]
     
     def read_sampling_buffer(self, smpl_num, offset):
@@ -209,12 +224,14 @@ class pci3177_driver(core.interface_driver):
         return d1 + d2
     
     def clear_sampling_data(self):
+        self.stop_sampling()
         self.buffer = []
         self.dtlog = []
+        self.smpl_count = 0
         return
     
     def start_sampling(self, sync_flag):
-        sampling_thread = threading.Thread(target=self._sampling_pool)
+        sampling_thread = threading.Thread(target=self._sampling_loop)
         sampling_thread.start()
         
         if sync_flag == 'SYNC':
@@ -225,10 +242,10 @@ class pci3177_driver(core.interface_driver):
     
     def _sampling_loop(self):
         self.buffer = list(range(self.conf['smpl_num']))
-        self.dtlog = list(range(self.conf['smpl_num']))
+        self.dtlog = [0 for _ in range(self.conf['smpl_num'])]
         self.flag_stop_sampling = False
         self.smpl_count = 0
-        dt = 1 / self.conf['sampl_freq']
+        dt = 1 / self.conf['smpl_freq']
         t0 = time.time()
         
         self.smpl_status = 'NOW_SAMPLING'
@@ -246,18 +263,11 @@ class pci3177_driver(core.interface_driver):
                     pass
                 pass
 
-            while True:
-                rest = dt - (time.time() - t0)
-                if rest > 1e-6:
-                    if rest > 5e-1: time.sleep(4e-1)
-                    elif rest > 5e-2: time.sleep(4e-2)
-                    elif rest > 5e-3: time.sleep(4e-3)
-                    elif rest > 5e-4: time.sleep(3e-4)
-                    elif rest > 5e-5: time.sleep(1e-5)
-                    else: time.sleep(1e-6)
-                    continue
-                break
-            
+            rest = dt - (time.time() - t0)
+            if rest > 1e-3:
+                time.sleep(rest - 1e-3)
+                pass
+
             t1 = time.time()
             self.dtlog[self.smpl_count-1] = t1 - t0
             t0 = t1
@@ -312,7 +322,7 @@ class pci3177_driver(core.interface_driver):
     
 
     def _wait_operation_stop(self):
-        while not self._is_busy():
+        while self._is_busy():
             time.sleep(1e-6)
             continue
         return
@@ -348,14 +358,14 @@ class pci3177_driver(core.interface_driver):
         is_busy = not is_idle
         return is_busy
     
-    def _set_ch_and_start_adc(self, ch_req):
+    def _set_ch_and_start_adc(self, ch):
         bar = 0
         size = 1
         offset = 0x04
         
-        ch_bitlist = ch2bitlist(ch['ch_no'])
+        ch_bitlist = ch2bitlist(ch)
         
-        if ch['ch_no'] == self._last_ch_no:
+        if ch == self._last_ch_no:
             mode = [1, 0]
         else:
             mode = [0, 0]
@@ -365,7 +375,7 @@ class pci3177_driver(core.interface_driver):
         
         self._wait_operation_stop()
         self.write(bar, offset, core.list2bytes(d))
-        self._last_ch_no = ch['ch_no']
+        self._last_ch_no = ch
         return
     
     def _get_data(self):
