@@ -44,7 +44,7 @@ class gpg3100(object):
         return
 
     
-    def set_sampling_config(self, ch_count, smpl_ch_req, sampling_mode, 
+    def set_sampling_config(self, smpl_ch_req, sampling_mode, 
                             single_diff, smpl_num, smpl_event_num, smpl_freq,
                             trig_point, trig_mode, trig_delay, trig_ch,
                             trig_level1, trig_level2, eclk_edge, atrg_pulse,
@@ -54,9 +54,6 @@ class gpg3100(object):
         
         Parameters
         ----------
-        ch_count : int
-            サンプリングするチャンネル数
-        
         smpl_ch_req : list of dict
             チャンネル毎のサンプリング条件
             辞書のリストで渡します。辞書には、ch_no, range を含めてください。
@@ -201,7 +198,7 @@ class gpg3100(object):
         ----------
         ...
         """
-        return self.driver.set_sampling_config(ch_count, smpl_ch_req,
+        return self.driver.set_sampling_config(smpl_ch_req,
                                                sampling_mode, single_diff,
                                                smpl_num, smpl_event_num,
                                                smpl_freq, trig_point,
@@ -228,7 +225,7 @@ class gpg3100(object):
         Examples
         --------
         >>> ad.get_sampling_config()
-        {'ch_count': 1, 'smpl_ch_req': [{'ch_no': 1, 'range': '0_1V'}],
+        {'smpl_ch_req': [{'ch_no': 1, 'range': '0_1V'}],
         'sampling_mode': 'IO', 'single_diff': 'SINGLE', 'smpl_num': 1024,
         'smpl_event_num': 0, 'smpl_freq': 0.0, 'trig_point': 'START',
         'trig_mode': 'FREERUN', 'trig_delay': 0, 'trig_ch': 1,
@@ -529,7 +526,7 @@ class gpg3100(object):
         return self.driver.input_di()
 
 
-    def input_do(self, data):
+    def output_do(self, data):
         """DOを設定します
         (GPG-3100 22. AdInputDO)
         
@@ -551,4 +548,3 @@ class gpg3100(object):
         ...
         """
         return self.driver.input_do(data)
-

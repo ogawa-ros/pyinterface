@@ -18,6 +18,36 @@ class InvalidInputrangeError(Exception):
     pass
 
 
+
+def ch2bitlist(ch):
+    ch_bit = '{0:06b}'.format(ch-1)
+    ch_bitlist = [int(_b) for _b in ch_bit[::-1]]
+    return ch_bitlist
+    
+def decode_adbit(adbit, range_):
+    if range_ == '0_5V':
+        lsb = 5 / 4096
+        start = 0
+    elif range_ == '0_10V':
+        lsb = 10 / 4096
+        start = 0
+    elif range_ == '2P5V':
+        lsb = 5 / 4096
+        start = -2.5
+    elif range_ == '5V':
+        lsb = 10 / 4096
+        start = -5
+    elif range_ == '10V':
+        lsb = 20 / 4096
+        start = -10
+    else:
+        raise('wrong range_ : %s'%(range_))
+    
+    ad_volt = adbit.to_int() * lsb - start
+    return ad_volt
+    
+
+
 class pci3177_driver(core.interface_driver):
     bit_flags_in = (
         (
@@ -62,7 +92,6 @@ class pci3177_driver(core.interface_driver):
         )
     )
 
-
     bit_flags_out = (
         (
             ('', '', '', '', '', '', '', ''),
@@ -95,7 +124,7 @@ class pci3177_driver(core.interface_driver):
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '', ''),
-            ('', 'OUT1', 'OUT2', '', '', '', '', ''),
+            ('OUT1', 'OUT2', '', '', '', '', '', ''),
             ('', '', '', '', '', '', '')
         ),
         (
@@ -105,8 +134,10 @@ class pci3177_driver(core.interface_driver):
             ('U/D', 'INC', 'CS', '', '', '', '', '')
         )
     )
-
-
+    
+    _last_ch_no = -1
+    _last_single_diff = ''
+    
     def get_board_id(self):
         bar = 0
         offset = 0x17
@@ -116,143 +147,149 @@ class pci3177_driver(core.interface_driver):
         bid = ret.to_hex()[1]
 
         return bid
+    
+    def initialize(self):
+        pass
+    
+    
+    def set_sampling_config(self, smpl_ch_req, sampling_mode, 
+                            single_diff, smpl_num, smpl_event_num, smpl_freq,
+                            trig_point, trig_mode, trig_delay, trig_ch,
+                            trig_level1, trig_level2, eclk_edge, atrg_pulse,
+                            trig_edge, trig_di, fast_mode):
+        pass
+    
+    def get_sampling_config(self):
+        pass
+        
+    def get_sampling_data(self, smpl_num):
+        pass
+    
+    def read_sampling_buffer(self, smpl_num, offset):
+        pass
+    
+    def clear_sampling_data(self):
+        pass
+    
+    def start_sampling(self, sync_flag):
+        pass
+    
+    def trigger_sampling(self, ch_no, smpl_num):
+        pass
+    
+    def stop_sampling(self):
+        pass
+    
+    def get_status(self):
+        pass
+    
+    def input_ad(self, single_diff, smpl_ch_req):
+        self._set_single_diff(single_diff)
+        d = [self._get_ad_oneshot(r['ch_no'], r['range'])
+             for r in smpl_ch_req]
+        return d
+    
+    def input_di(self):
+        bar = 0
+        size = 1
+        offset = 0x1e
+        
+        di = self.read(bar, offset, size)
+        di_list = di.to_list()[:2]
+        return di_list
+        
+    def output_do(self, do_list):
+        bar = 0
+        size = 1
+        offset = 0x1e
+        
+        do_list2 = do_list + [0]*(8-len(do_list))
+        self.write(bar, offset, core.list2bytes(do_list2))
+        return
+        
+    
 
-    def _ch2list(self, ch=1):
-        if ch == 0: return []
-        else:
-            bit_ch = bin(ch-1).replace('0b', '0' * (8 - (len(bin(ch - 1)) - 2)))
-            bit_list = [bit_ch[i] for i in range(len(bit_ch))]
-            bit_list.reverse()
-
-            return bit_list
-
-    def _verify_mode(self, mode):
-        mode_list = list(ad_mode.keys())
-        if mode in mode_list: pass
-        else:
-            msg = 'Mode must be single or diff,'
-            msg += ' while {0} is given.'.format(mode)
-            raise InvalidModeError(msg)
+    def _wait_operation_stop(self):
+        while not self._is_busy():
+            time.sleep(1e-6)
+            continue
         return
 
-    def _verify_ch(self, ch=1, mode='single'):
-        if ch in [_ for _ in range(1, ad_mode['{}'.format(mode)] + 1)]: pass
+    def _get_ad_oneshot(self, ch, range_):
+        self._set_ch_and_start_adc(ch)
+        ad_bit = self._get_data()
+        ad_volt = decode_adbit(ad_bit, range_)
+        return ad_volt
+
+    def _set_single_diff(self, single_diff):
+        if single_diff == self._last_single_diff:
+            return
+        
+        if single_diff == 'SINGLE':
+            flag = ''
+        elif single_diff == 'DIFF':
+            flag = 'SD0'
         else:
-            msg = 'Ch range is in ch1 -- ch{},'.format(ad_mode['{}'.format(mode)])
-            msg += ' while ch{} is given.'.format(ch)
-            raise InvalidChError(msg)
+            raise('wrong single_diff: %s'%single_diff)
+        
+        self._set_input_config(flag)
+        self._last_single_diff = single_diff
         return
 
-    def _verify_mode(self, mode):
-        mode_list = ['single', 'diff']
-        if mode in mode_list: pass
-
-    def _verify_inputrange(self, inputrange='DA-10_10V'):
-        if inputrange in inputrange_list: pass
-        else:
-            msg = 'Inputrange is {0}.'.format(inputrange_list)
-            raise InvalidInputrangeError(msg)
-        return
-
-    def _list2voltage(self, voltage_list, inputrange):
-        voltage_range = float(inputrange.split('_')[-1].replace('V', ''))
-        resolution = 12
-        resolution_int = 2 ** resolution
-
-        if inputrange[2] == '0':
-            voltage_int = int.from_bytes(core.list2bytes(voltage_list), 'little')
-            voltage = voltage_range / resolution_int * voltage_int
-
-            return voltage
-
-        else:
-            voltage_int = int.from_bytes(core.list2bytes(voltage_list), 'little')
-            voltage = -voltage_range + (voltage_range / (resolution_int / 2)) * voltage_int
-
-            return voltage
-        return
 
     def _is_busy(self):
         bar = 0
         size = 1
         offset = 0x03
-
-        while not(self.read(bar, offset, size)[7]): pass
-        return
-
-    def _set_sampling_mode(self, mode='single'):
-        bar = 0
-        offset = 0x05
-
-        if mode == 'single': mode = ''
-        elif mode == 'diff': mode = 'SD0'
-
-        flags = mode
-        self.set_flag(bar, offset, flags)
-        return
-
-    def _start_sampling(self, ch=1):
+        
+        is_idle = self.read(bar, offset, size)[7]
+        is_busy = not is_idle
+        return is_busy
+    
+    def _set_ch_and_start_adc(self, ch_req):
         bar = 0
         size = 1
         offset = 0x04
-
-        self.write(bar, offset, core.list2bytes(self._ch2list(ch)))
-        time.sleep(60 * 10 ** (-6))
-        self._is_busy()
+        
+        ch_bitlist = ch2bitlist(ch['ch_no'])
+        
+        if ch['ch_no'] == self._last_ch_no:
+            mode = [1, 0]
+        else:
+            mode = [0, 0]
+            pass
+        
+        d = ch_bitlist + mode
+        
+        self._wait_operation_stop()
+        self.write(bar, offset, core.list2bytes(d))
+        self._last_ch_no = ch['ch_no']
         return
-
-    def input_voltage(self, ch=1, mode='single', inputrange='AD-10_10V'):
-        """電圧入力をします （Main Method）
-
-        Parameters
-        ----------
-        ch : int
-            取得する電圧入力のチャンネルを指定します（範囲: 1 -- 16）
-        mode : str
-            電圧入力方式を指定します
-              - 'single'   のとき、シングルエンド入力
-              - 'diff'     のとき、差動入力
-        inputrange : str
-            電圧入力レンジを指定します
-              - 'DA0_5V'
-              - 'DA0_10V'
-              - 'DA-2.5_2.5V'
-              - 'DA-5_5V'
-              - 'DA-10_10V'（default）
-
-        Returns
-        -------
-        float（単位 : V）
-            指定したチャンネルの電圧入力の値
-
-        Examples
-        --------
-        ch1 -- ch8 の電圧入力を取得します
-        （差動入力、AD-5_5V）
-
-        >>> [ad.input_voltage(_, 'diff', 'AD-5_5V') for _ in range(1, 9)]
-        [-0.003662109375,
-        -0.006103515625,
-        -0.00244140625,
-        0.0,
-        0.0048828125,
-        0.00244140625,
-        -0.001220703125,
-        0.0]
-        """
+    
+    def _get_data(self):
         bar = 0
         size = 2
         offset = 0x00
+        
+        self._wait_operation_stop()
+        data = self.read(bar, offset, size)
+        return data
+    
+    def _read_input_config(self):
+        bar = 0
+        size = 1
+        offset = 0x05
+        
+        d = self.read(bar, offset, size)
+        return d
+        
+    def _set_input_config(self, flag):
+        bar = 0
+        size = 1
+        offset = 0x05
+        
+        self.set_flag(bar, offset, flag)
+        return
+        
 
-        self._verify_mode(mode)
-        self._verify_ch(ch, mode)
-        self._verify_inputrange(inputrange)
 
-        self._set_sampling_mode(mode)
-        self._start_sampling(ch)
-        voltage = self._list2voltage(self.read(bar, offset, size).to_list(), inputrange)
-
-        if mode == 'single': pass
-        elif mode == 'diff': voltage = voltage / 2
-
-        return voltage
