@@ -31,6 +31,9 @@ def open(board_name, board_id):
         raise TypeError(msg)
     
     for board in board_list:
+        
+        # GPG-2000
+        # --------
         if board_name == 2702:
             b = pci2702.pci2702_driver(board)
             if b.board_id == board_id:
@@ -43,6 +46,8 @@ def open(board_name, board_id):
                 return gpg2000.gpg2000(b)
             pass
         
+        # GPG-3100
+        # --------
         if board_name == 3165:
             # temporary
             b = pci3165.pci3165_driver(board)
@@ -55,7 +60,9 @@ def open(board_name, board_id):
             if b.board_id == board_id:
                 return b
             pass
-
+        
+        # GPG-3300
+        # --------
         if board_name == 3342:
             # temporary
             b = pci3342.pci3342_driver(board)
@@ -75,18 +82,24 @@ def open(board_name, board_id):
                 return b
             pass
         
+        # GPG-6204
+        # --------
         if board_name == 6204:
             b = pci6204.pci6204_driver(board)
             if b.board_id == board_id:
                 return gpg6204.gpg6204(b)
             pass
-
+        
+        # GPG-7204
+        # --------
         if board_name == 7204:
             b = pci7204.pci7204_driver(board)
             if b.board_id == board_id:
                 return gpg7204.gpg7204(b)
             pass
-
+        
+        # GPG-7415
+        # --------
         if board_name == 7415:
             b = pci7415v.pci7415v_driver(board)
             if b.board_id == board_id:
