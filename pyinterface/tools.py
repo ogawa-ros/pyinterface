@@ -2,6 +2,7 @@
 import pypci
 
 from . import gpg2000
+from . import gpg3100
 from . import gpg6204
 from . import gpg7204
 
@@ -58,7 +59,7 @@ def open(board_name, board_id):
         if board_name == 3177:
             b = pci3177.pci3177_driver(board)
             if b.board_id == board_id:
-                return b
+                return gpg3100.gpg3100(b)
             pass
         
         # GPG-3300

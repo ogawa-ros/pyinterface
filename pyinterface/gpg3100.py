@@ -44,11 +44,13 @@ class gpg3100(object):
         return
 
     
-    def set_sampling_config(self, smpl_ch_req, sampling_mode, 
-                            single_diff, smpl_num, smpl_event_num, smpl_freq,
-                            trig_point, trig_mode, trig_delay, trig_ch,
-                            trig_level1, trig_level2, eclk_edge, atrg_pulse,
-                            trig_edge, trig_di, fast_mode):
+    def set_sampling_config(self, smpl_ch_req=None, sampling_mode=None, 
+                            single_diff=None, smpl_num=None,
+                            smpl_event_num=None, smpl_freq=None,
+                            trig_point=None, trig_mode=None, trig_delay=None,
+                            trig_ch=None, trig_level1=None, trig_level2=None,
+                            eclk_edge=None, atrg_pulse=None, trig_edge=None,
+                            trig_di=None, fast_mode=None):
         """サンプリング条件を設定します
         (GPG-3100 7. AdSetSamplingConfig)
         
@@ -198,14 +200,14 @@ class gpg3100(object):
         ----------
         ...
         """
-        return self.driver.set_sampling_config(smpl_ch_req,
-                                               sampling_mode, single_diff,
-                                               smpl_num, smpl_event_num,
-                                               smpl_freq, trig_point,
-                                               trig_mode, trig_delay, trig_ch,
-                                               trig_level1, trig_level2, 
-                                               eclk_edge, atrg_pulse,
-                                               trig_edge, trig_di, fast_mode)
+        return self.driver.set_sampling_config(smpl_ch_req, sampling_mode,
+                                               single_diff, smpl_num,
+                                               smpl_event_num, smpl_freq,
+                                               trig_point, trig_mode,
+                                               trig_delay, trig_ch, trig_level1,
+                                               trig_level2, eclk_edge,
+                                               atrg_pulse, trig_edge, trig_di,
+                                               fast_mode)
 
 
     def get_sampling_config(self):
@@ -320,7 +322,7 @@ class gpg3100(object):
         return self.driver.clear_sampling_data()
 
     
-    def start_sampling(self, sync_flag='ASYNC'):
+    def start_sampling(self, sync_flag):
         """サンプリングをスタートします
         (GPG-3100 12. AdStartSampling)
         
