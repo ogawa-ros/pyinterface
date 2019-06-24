@@ -260,43 +260,6 @@ class pci3177_driver(core.interface_driver):
         
         return
 
-    """
-    def _sampling_loop(self, buffer_, dtlog, flag_stop_sampling, smpl_count):
-        dt = 1 / self.conf['smpl_freq']
-        t0 = time.time()
-        
-        
-        while True:
-            d = self.input_ad(self.conf['single_diff'], self.conf['smpl_ch_req'])
-            self.buffer[self.smpl_count] = d
-            self.smpl_count += 1
-            
-            if self.smpl_count >= self.conf['smpl_num']:
-                if self.conf['trig_mode'] != 'ETERNITY':
-                    break
-                else:
-                    self.smpl_count = 0
-                    pass
-                pass
-
-            rest = dt - (time.time() - t0)
-            if rest > 1e-3:
-                time.sleep(rest - 1e-3)
-                pass
-
-            t1 = time.time()
-            self.dtlog[self.smpl_count-1] = t1 - t0
-            t0 = t1
-            
-            if self.flag_stop_sampling:
-                break
-            
-            continue
-
-        self.smpl_status = 'STOP_SAMPLING'
-        return
-    """
-    
     def trigger_sampling(self, ch_no, smpl_num):
         raise NotImplementedError()
     
@@ -367,7 +330,6 @@ class pci3177_driver(core.interface_driver):
         self._set_input_config(flag)
         self._last_single_diff = single_diff
         return
-
 
     def _is_busy(self):
         bar = 0
