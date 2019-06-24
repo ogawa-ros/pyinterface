@@ -1,6 +1,8 @@
 
 import time
 import threading
+import multiprocessing
+import psutil
 from . import core
 
 
@@ -134,11 +136,11 @@ class pci3177_driver(core.interface_driver):
     _last_ch_no = -1
     _last_single_diff = ''
     conf = {}
-    buffer = []
-    dtlog = []
+    buffer = multiprocessing.Array('f', [])
+    dtlog = multiprocessing.Array('f', [])
     smpl_status = 'STOP_SAMPLING'
-    smpl_count = 0
-    flag_stop_sampling = False
+    smpl_count = multiprocessing.Value('l', 0)
+    flag_stop_sampling = multiprocessing.Value('b', False)
     
     def get_board_id(self):
         bar = 0
@@ -210,45 +212,59 @@ class pci3177_driver(core.interface_driver):
         return self.conf
         
     def get_sampling_data(self, smpl_num):
+        raise NotImplemented()
         self.smpl_count -= smpl_num
         return [self.buffer.pop(0) for i in range(smpl_num)]
     
     def read_sampling_buffer(self, smpl_num, offset):
-        dlen = len(self.buffer)
+        buffer_1 = list(self.buffer)
+        blen = len(buffer_1)
+        ddlen = len(self.conf['smpl_ch_req'])
+        buffer_ = [buffer_1[i*ddlen:(i+1)*ddlen] for i in range(blen//ddlen)]
+        dlen = len(buffer_)
         
         if smpl_num + offset < dlen:
-            return self.buffer[offset:offset+smpl_num]
+            return buffer_[offset:offset+smpl_num]
         
-        d1 = self.buffer[offset:]
-        d2 = self.buffer[:smpl_num+offset-dlen]
+        d1 = buffer_[offset:]
+        d2 = buffer_[:smpl_num+offset-dlen]
         return d1 + d2
     
     def clear_sampling_data(self):
         self.stop_sampling()
-        self.buffer = []
-        self.dtlog = []
-        self.smpl_count = 0
+        self.buffer = multiprocessing.Array('f', [])
+        self.dtlog = multiprocessing.Array('f', [])
+        self.smpl_count = multiprocessing.Value('l', 0)
         return
     
     def start_sampling(self, sync_flag):
-        sampling_thread = threading.Thread(target=self._sampling_loop)
-        sampling_thread.start()
+        self.buffer = multiprocessing.Array('f', self.conf['smpl_num'] * len(self.conf['smpl_ch_req']))
+        self.dtlog = multiprocessing.Array('f', [0 for _ in range(self.conf['smpl_num'])])
+        self.flag_stop_sampling = multiprocessing.Value('b', False)
+        self.smpl_count = multiprocessing.Value('l', 0)
+
+        sampling_proc = multiprocessing.Process(target=sampling_loop,
+                                                args=[self, self.buffer, self.dtlog,
+                                                      self.flag_stop_sampling,
+                                                      self.smpl_count])
+        
+        sampling_proc.start()
+        sampling_putil = psutil.Process(sampling_proc.pid)
+        sampling_putil.nice(-20)
+        
+        self.smpl_status = 'NOW_SAMPLING'
         
         if sync_flag == 'SYNC':
-            sampling_thread.join()
+            sampling_proc.join()
             pass
         
         return
-    
-    def _sampling_loop(self):
-        self.buffer = list(range(self.conf['smpl_num']))
-        self.dtlog = [0 for _ in range(self.conf['smpl_num'])]
-        self.flag_stop_sampling = False
-        self.smpl_count = 0
+
+    """
+    def _sampling_loop(self, buffer_, dtlog, flag_stop_sampling, smpl_count):
         dt = 1 / self.conf['smpl_freq']
         t0 = time.time()
         
-        self.smpl_status = 'NOW_SAMPLING'
         
         while True:
             d = self.input_ad(self.conf['single_diff'], self.conf['smpl_ch_req'])
@@ -279,12 +295,16 @@ class pci3177_driver(core.interface_driver):
 
         self.smpl_status = 'STOP_SAMPLING'
         return
+    """
     
     def trigger_sampling(self, ch_no, smpl_num):
         raise NotImplementedError()
     
     def stop_sampling(self):
-        self.flag_stop_sampling = True
+        with self.flag_stop_sampling.get_lock():
+            self.flag_stop_sampling.value = True
+            pass
+        self.smpl_status = 'STOP_SAMPLING'
         return
     
     def get_status(self):
@@ -405,3 +425,47 @@ class pci3177_driver(core.interface_driver):
         
 
 
+def sampling_loop(ad, buffer_, dtlog, flag_stop_sampling, smpl_count):
+        dt = 1 / ad.conf['smpl_freq']
+        t0 = time.time()
+        dlen = len(ad.conf['smpl_ch_req'])
+        
+        while True:
+            d = ad.input_ad(ad.conf['single_diff'], ad.conf['smpl_ch_req'])
+            
+            with buffer_.get_lock():
+                for i in range(dlen):
+                    buffer_[smpl_count.value * dlen + i] = d[i]
+                pass
+            
+            with smpl_count.get_lock():
+                smpl_count.value += 1
+                pass
+            
+            if smpl_count.value >= ad.conf['smpl_num']:
+                if ad.conf['trig_mode'] != 'ETERNITY':
+                    break
+                else:
+                    with smpl_count.get_lock():
+                        smpl_count.value = 0
+                        pass
+                    pass
+                pass
+            
+            rest = dt - (time.time() - t0)
+            if rest > 1e-4:
+                time.sleep(rest - 1e-4)
+                pass
+
+            t1 = time.time()
+            with dtlog.get_lock():
+                dtlog[smpl_count.value-1] = t1 - t0
+                pass
+            t0 = t1
+            
+            if flag_stop_sampling.value:
+                break
+            
+            continue
+        return
+    

@@ -8,6 +8,7 @@
 class gpg7204(object):
     def __init__(self, driver):
         self.driver = driver
+        self.board_id = driver.board_id
         pass
 
     def initialize(self, axis=1):

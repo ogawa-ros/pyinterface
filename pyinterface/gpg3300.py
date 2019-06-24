@@ -7,6 +7,11 @@
 class gpg3300(object):
     def __init__(self, driver):
         self.driver = driver
+        self.board_id = driver.board_id
+        self.available_ranges = driver.available_ranges
+        self.available_da_channel_num = driver.available_da_channel_num
+        self.available_di_channel_num = driver.available_di_channel_num
+        self.available_do_channel_num = driver.available_do_channel_num
         pass
 
     def initialize(self):

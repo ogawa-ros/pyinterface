@@ -92,6 +92,7 @@ class gpg2000(object):
     
     def __init__(self, driver):
         self.driver = driver
+        self.board_id = self.driver.board_id
         pass
     
     

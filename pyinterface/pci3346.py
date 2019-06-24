@@ -6,7 +6,7 @@ from . import core
 
 
 def ch2byte(ch):
-    ch_bit = '{0:08b}'.format(ch-1)
+    ch_bit = '{0:08b}'.format(ch-1)[::-1]
     ch_byte = core.bit2bytes(ch_bit)
     return ch_byte
 
@@ -62,7 +62,7 @@ def bytes2volt(da_bytes, range_):
     else:
         raise Exception('wrong range_ : %s'%(range_))
     
-    da_volt = da_bytes.to_uint() * lsb - start
+    da_volt = da_bytes.to_uint() * lsb + start
     return da_volt
 
 
@@ -142,6 +142,15 @@ class pci3346_driver(core.interface_driver):
         ),
     )
     
+    available_ranges = [
+        '0_10V',
+        '5V',
+        '10V',
+    ]
+    available_da_channel_num = 16
+    available_di_channel_num = 2
+    available_do_channel_num = 2
+
     last = {}
 
     def get_board_id(self):
@@ -163,6 +172,14 @@ class pci3346_driver(core.interface_driver):
             'range_ch': 1,
             'range': {_: '0_10V' for _ in range(1, 17)},
         }
+        self.output_da([{'ch_no': i+1, 'range': '0_10V'}
+                        for i in range(self.available_da_channel_num)],
+                       [0 for i in range(self.available_da_channel_num)])
+        self._set_output_ch(1)
+        self._set_control_mode_clear()
+        self._set_range_ch(1)
+        self._set_output_off()
+        self._da_set_do(core.bit2bytes('00'))
         return
 
     def set_sampling_config(self, smpl_ch_req=None, sampling_mode=None,
@@ -193,7 +210,6 @@ class pci3346_driver(core.interface_driver):
         self._set_output_on()
         self._set_control_mode_wait()
         for req, d in zip(smpl_ch_req, data):
-            self._set_output_range(req['ch_no'], req['range'])
             self._set_output_voltage(req['ch_no'], req['range'], d)
             continue
         self._set_control_mode_sync()
@@ -227,12 +243,11 @@ class pci3346_driver(core.interface_driver):
         raise NotImplemented()
 
     def _set_output_voltage(self, ch, range_, volt):
-        if self.last['output'][ch] != volt:
-            self.set_output_ch(ch)
-            volt_bytes = volt2bytes(volt, range_)
-            self._da_set_output(volt_bytes)
-            self.last['output'][ch] = volt
-            pass
+        self._set_output_range(ch, range_)
+        self._set_output_ch(ch)
+        volt_bytes = volt2bytes(volt, range_)
+        self._da_set_output(volt_bytes)
+        self.last['output'][ch] = volt
         return
     
     def _set_output_ch(self, ch):
@@ -259,7 +274,7 @@ class pci3346_driver(core.interface_driver):
     
     def _set_control_mode_sync(self):
         if self.last['control_mode'] != 'SYNC':
-            self._da_set_control_mode('MD0 MD1')
+            self._da_set_control_mode('MD0')
             self.last['control_mode'] = 'SYNC'
             pass
         return
@@ -318,7 +333,7 @@ class pci3346_driver(core.interface_driver):
     def _da_set_output_ch(self, ch_byte):
         bar = 0
         offset = 0x02
-        self.write(bar, offset, da_byte)
+        self.write(bar, offset, ch_byte)
         return
     
     def _da_get_output_ch(self):
@@ -336,7 +351,7 @@ class pci3346_driver(core.interface_driver):
     def _da_set_output_range(self, range_flag):
         bar = 0
         offset = 0x06
-        self.set_flag(bar, offset, mode_flag)
+        self.set_flag(bar, offset, range_flag)
         return
 
     def _da_get_output_range(self):
@@ -348,7 +363,7 @@ class pci3346_driver(core.interface_driver):
     def _da_set_range_ch(self, ch_byte):
         bar = 0
         offset = 0x07
-        self.write(bar, offset, da_byte)
+        self.write(bar, offset, ch_byte)
         return
         
     def _da_get_range_ch(self):
@@ -372,7 +387,7 @@ class pci3346_driver(core.interface_driver):
     def _da_set_do(self, do_byte):
         bar = 0
         offset = 0x1e
-        self.set_flag(bar, offset, flag)
+        self.write(bar, offset, do_byte)
         return
     
     def _da_get_di(self):
