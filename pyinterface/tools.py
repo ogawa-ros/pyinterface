@@ -6,6 +6,7 @@ from . import gpg3100
 from . import gpg3300
 from . import gpg6204
 from . import gpg7204
+from . import gpg7400
 
 from . import pci2702
 from . import pci2724
@@ -48,7 +49,7 @@ def open3346(pci_config_header):
 
 def open3408(pci_config_header):
     driver = pci340816.pci340816_driver(pci_config_header)
-    return driver
+    return gpg3300.gpg3300(driver)
 
 def open3405(pci_config_header):
     driver = pci3405.pci3405_driver(pci_config_header)
@@ -64,7 +65,7 @@ def open7204(pci_config_header):
 
 def open7415(pci_config_header):
     driver = pci7415.pci7415_driver(pci_config_header)
-    return driver
+    return gpg7400.gpg7400(driver)
 
 
 
