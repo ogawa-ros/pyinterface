@@ -4,7 +4,7 @@ import time
 import struct
 from . import core
 
- 
+
 ch_number = 16
 
 
@@ -179,7 +179,7 @@ class pci340816_driver(core.interface_driver):
         return flags
 
 
-    def output_voltage(self, ch=1, voltage=0.):
+    def output_voltage(self, smpl_ch_req, data):
         """電圧出力をします （Main Method）
 
         Prameters
@@ -192,13 +192,13 @@ class pci340816_driver(core.interface_driver):
         bar = 0
         offset = 0x00
 
-        self._verify_ch(ch)
-        self._verify_voltage(voltage)
+        self._verify_ch(smpl_ch_req)
+        self._verify_voltage(data)
 
         self._set_sampling_config('all_output_disable')
         self._set_onoff(onoff=1)
         self._select_ch(ch)
-        self.write(bar, offset, core.list2bytes(self._voltage2list(voltage)))
+        self.write(bar, offset, core.list2bytes(self._voltage2list(data)))
 
         print('[OUTPUT INFO] CH:{ch} Voltage:{voltage:.2f}V'.format(**locals()))
         return
