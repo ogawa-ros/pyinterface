@@ -179,7 +179,7 @@ class pci340816_driver(core.interface_driver):
         return flags
 
 
-    def output_voltage(self, smpl_ch_req, data):
+    def output_da(self, smpl_ch_req, data):
         """電圧出力をします （Main Method）
 
         Prameters
