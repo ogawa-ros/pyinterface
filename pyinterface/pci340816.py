@@ -197,7 +197,7 @@ class pci340816_driver(core.interface_driver):
 
         self._set_sampling_config('all_output_disable')
         self._set_onoff(onoff=1)
-        self._select_ch(ch)
+        self._select_ch(smpl_ch_req)
         self.write(bar, offset, core.list2bytes(self._voltage2list(data)))
 
         print('[OUTPUT INFO] CH:{ch} Voltage:{voltage:.2f}V'.format(**locals()))
