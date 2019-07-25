@@ -49,7 +49,7 @@ def open3346(pci_config_header):
 
 def open3408(pci_config_header):
     driver = pci340816.pci340816_driver(pci_config_header)
-    return gpg3300.gpg3300(driver)
+    return driver
 
 def open3405(pci_config_header):
     driver = pci3405.pci3405_driver(pci_config_header)
