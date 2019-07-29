@@ -140,7 +140,7 @@ class pci3177_driver(core.interface_driver):
     dtlog = multiprocessing.Array('f', [])
     smpl_status = 'STOP_SAMPLING'
     smpl_count = multiprocessing.Value('l', 0)
-    flag_stop_sampling = multiprocessing.Value('b', False)
+    flag_stop_sampling = multiprocessing.Value('b', True)
     
     def get_board_id(self):
         bar = 0
@@ -222,6 +222,10 @@ class pci3177_driver(core.interface_driver):
         ddlen = len(self.conf['smpl_ch_req'])
         buffer_ = [buffer_1[i*ddlen:(i+1)*ddlen] for i in range(blen//ddlen)]
         dlen = len(buffer_)
+
+        if offset < 0:
+            offset = dlen + offset
+            pass
         
         if smpl_num + offset < dlen:
             return buffer_[offset:offset+smpl_num]
@@ -234,14 +238,19 @@ class pci3177_driver(core.interface_driver):
         self.stop_sampling()
         self.buffer = multiprocessing.Array('f', [])
         self.dtlog = multiprocessing.Array('f', [])
-        self.smpl_count = multiprocessing.Value('l', 0)
+        self.smpl_count.value = 0
+        self.flag_stop_sampling.value = True
+        self.smpl_status = 'STOP_SAMPLING'
         return
     
     def start_sampling(self, sync_flag):
+        if self.flag_stop_sampling.value == False:
+            return
+        
         self.buffer = multiprocessing.Array('f', self.conf['smpl_num'] * len(self.conf['smpl_ch_req']))
         self.dtlog = multiprocessing.Array('f', [0 for _ in range(self.conf['smpl_num'])])
-        self.flag_stop_sampling = multiprocessing.Value('b', False)
-        self.smpl_count = multiprocessing.Value('l', 0)
+        self.flag_stop_sampling.value = False
+        self.smpl_count.value = 0
 
         sampling_proc = multiprocessing.Process(target=sampling_loop,
                                                 args=[self, self.buffer, self.dtlog,
@@ -264,17 +273,19 @@ class pci3177_driver(core.interface_driver):
         raise NotImplementedError()
     
     def stop_sampling(self):
-        with self.flag_stop_sampling.get_lock():
-            self.flag_stop_sampling.value = True
-            pass
+        self.flag_stop_sampling.value = True
         self.smpl_status = 'STOP_SAMPLING'
         return
     
     def get_status(self):
+        if self.flag_stop_sampling.value == True:
+            self.smpl_status = 'STOP_SAMPLING'
+            pass
+        
         d = {
             'smpl_status': self.smpl_status,
-            'smpl_count': self.smpl_count,
-            'avail_count': len(self.buffer) - self.smpl_count,
+            'smpl_count': self.smpl_count.value,
+            'avail_count': len(self.buffer)//len(self.conf['smpl_ch_req']) - self.smpl_count.value,
         }
         return d
     
@@ -388,46 +399,43 @@ class pci3177_driver(core.interface_driver):
 
 
 def sampling_loop(ad, buffer_, dtlog, flag_stop_sampling, smpl_count):
-        dt = 1 / ad.conf['smpl_freq']
-        t0 = time.time()
-        dlen = len(ad.conf['smpl_ch_req'])
+    dt = 1 / ad.conf['smpl_freq']
+    t0 = time.time()
+    dlen = len(ad.conf['smpl_ch_req'])
+    
+    while True:
+        d = ad.input_ad(ad.conf['single_diff'], ad.conf['smpl_ch_req'])
         
-        while True:
-            d = ad.input_ad(ad.conf['single_diff'], ad.conf['smpl_ch_req'])
-            
-            with buffer_.get_lock():
-                for i in range(dlen):
-                    buffer_[smpl_count.value * dlen + i] = d[i]
-                pass
-            
-            with smpl_count.get_lock():
-                smpl_count.value += 1
-                pass
-            
-            if smpl_count.value >= ad.conf['smpl_num']:
-                if ad.conf['trig_mode'] != 'ETERNITY':
-                    break
-                else:
-                    with smpl_count.get_lock():
-                        smpl_count.value = 0
-                        pass
-                    pass
-                pass
-            
-            rest = dt - (time.time() - t0)
-            if rest > 1e-4:
-                time.sleep(rest - 1e-4)
-                pass
-
-            t1 = time.time()
-            with dtlog.get_lock():
-                dtlog[smpl_count.value-1] = t1 - t0
-                pass
-            t0 = t1
-            
-            if flag_stop_sampling.value:
-                break
-            
+        for i in range(dlen):
+            buffer_[smpl_count.value * dlen + i] = d[i]
             continue
-        return
+        
+        with smpl_count.get_lock():
+            smpl_count.value += 1
+            pass
+        
+        if smpl_count.value >= ad.conf['smpl_num']:
+            if ad.conf['trig_mode'] != 'ETERNITY':
+                break
+            else:
+                smpl_count.value = 0
+                pass
+            pass
+        
+        rest = dt - (time.time() - t0)
+        if rest > 1e-4:
+            time.sleep(rest - 1e-4)
+            pass
+        
+        t1 = time.time()
+        dtlog[smpl_count.value-1] = t1 - t0
+        t0 = t1
+        
+        if flag_stop_sampling.value:
+            break
+        
+        continue
+    
+    flag_stop_sampling.value = True
+    return
     

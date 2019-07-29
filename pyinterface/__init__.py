@@ -1,6 +1,6 @@
 
 
-__version__ = '1.5.0'
+__version__ = '1.5.5'
 
 interface_vendor_id = 0x1147
 
