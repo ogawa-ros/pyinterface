@@ -52,12 +52,13 @@ class gpg7400(object):
 
     def __init__(self, driver):
         self.driver = driver
+        self.board_id = driver.board_id
         pass
 
 
     def initialize(self):
         """ボードを初期化します
-        
+
         - DioOpen 関数に概ね対応しますが、pyinterface には open の概念がありませんので
           initialize() を実行しなくともドライバへアクセス可能です。
         - initialize() を実行しない場合、直前のボード状況が反映されています。
@@ -352,5 +353,3 @@ class gpg7400(object):
         """
         data = self.driver.input_di()
         return data
-
-
