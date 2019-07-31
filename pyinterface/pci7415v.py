@@ -7,68 +7,50 @@ from . import core
 # =========
 
 def to_comp28_format(x):
-    data = []
-    for i in range(len(x)):
-        a = int(x[i]) & 0xfffffff
-        data.append(struct.pack('<I', a))
+    data = [struct.pack('I', i & 0xffffffff) for i in x]
     return data
 
 def to_comp16_format(x):
-    data = []
-    for i in range(len(x)):
-        a = int(x[i]) & 0xffff
-        data.append(struct.pack('<I', a))
+    data = [struct.pack('<I', i & 0xffff) for i in x]
     return data
 
 def to_byte_format(x):
-    data = []
-    for i in range(len(x)):
-        a = x[i]
-        data.append(struct.pack('<I', a))
+    data = [struct.pack('<I', i) for i in x]
     return data
 
 def to_prmd_format(x):
     pass
 
 def to_prip_format(x):
-    data = []
-    for i in range(len(x)):
-        a = x[i] & 0xfffffff
-        data.append(struct.pack('<I', a))
+    data = [struct.pack('<I', i & 0xfffffff) for i in x]
     return data
 
 def from_comp28_format(x):
     data = []
-    for i in range(len(x)):
-        a = x[i].to_bit()
-        b = a[0:28][::-1]
-        c = -int(b[0]) << len(b) | int(b, 2)
-        data.append(c)
+    for i in x:
+        a = i.to_bit()[0:28][::-1]
+        b = -int(a[0]) << len(a) | int(a, 2)
+        data.append(b)
     return data
 
 def from_comp16_format(x):
     data = []
-    for i in range(len(x)):
-        a = x[i].to_bit()
-        b = a[0:16][::-1]
-        c = -int(b[0]) << len(b) | int(b, 2)
-        data.append(c)
+    for i in x:
+        a = i.to_bit()[0:16][::-1]
+        b = -int(a[0]) << len(a) | int(a, 2)
+        data.append(b)
     return data
 
 def from_byte_format(x):
-    data = []
-    for i in range(len(x)):
-        a = x[i].to_int()
-        data.append(a)
+    data = [i.to_int() for i in x]
     return data
 
 def from_rpls_format(x):
     data = []
-    for i in range(len(x)):
-        a = x[i].to_bit()
-        b = a[0:28][::-1]
-        c = -int(b[0]) << len(b) | int(b, 2)
-        data.append(c)
+    for i in x:
+        a = i.to_bit()[0:28][::-1]
+        b = -int(a[0]) << len(a) | int(a, 2)
+        data.append(b)
     return data
 
 def do_nothing(x):
@@ -186,7 +168,7 @@ class pci7415v_driver(core.interface_driver):
         )
     )
 
-    cmd_dic = {
+    cmd_dict = {
         'write': {
             'rmv':   {'cmd': 0x90, 'func': to_comp28_format},
             'rfl':   {'cmd': 0x91, 'func': to_byte_format},
@@ -210,7 +192,7 @@ class pci7415v_driver(core.interface_driver):
             'prip':  {'cmd': 0x88, 'func': to_prip_format},
             'prus':  {'cmd': 0x89, 'func': to_byte_format},
             'prds':  {'cmd': 0x8A, 'func': to_byte_format},
-            'rcun1': {'cmd': 0xA3, 'func': to_comp28_format}
+            'rcun1': {'cmd': 0xA3, 'func': to_comp28_format},
         },
         'read': {
             'rmv':   {'cmd': 0xD0, 'func': from_comp28_format},
@@ -245,7 +227,7 @@ class pci7415v_driver(core.interface_driver):
             'rltc4': {'cmd': 0xF0, 'func': from_comp28_format},
             'rsts':  {'cmd': 0xF1, 'func': do_nothing},
             'rpls':  {'cmd': 0xF4, 'func': from_rpls_format},
-            'rspd':  {'cmd': 0xF5, 'func': from_byte_format}
+            'rspd':  {'cmd': 0xF5, 'func': from_byte_format},
         },
         'send': {
             'fchgl': {'cmd': 0x40}, 'fchgh': {'cmd': 0x41},
@@ -255,179 +237,179 @@ class pci7415v_driver(core.interface_driver):
             'stad':  {'cmd': 0x52}, 'staud': {'cmd': 0x53},
             'cntfl': {'cmd': 0x54}, 'cntfh': {'cmd': 0x55},
             'cntd':  {'cmd': 0x56}, 'cntud': {'cmd': 0x57},
-            'srst':  {'cmd': 0x04}
-        }
+            'srst':  {'cmd': 0x04},
+        },
     }
 
     move_mode = {
         'jog': 0x00, 'org': None, 'ptp': 0x42,
         'timer': None, 'single_step': None, 'org_search': None,
-        'org_exit': None, 'org_zero': None, 'ptp_repeat': None
+        'org_exit': None, 'org_zero': None, 'ptp_repeat': None,
     }
 
     motion_conf = {
         'jog': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'org': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'ptp': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'timer': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'single_step': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'org_search': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'org_exit': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'org_zero': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
         },
         'ptp_repeat': {
             'x': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'y': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'z': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
             },
             'u': {
                 'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-            }
-        }
+                'speed': 0, 'acc': 0, 'dec': 0, 'step': 0,
+            },
+        },
     }
 
 
@@ -441,21 +423,18 @@ class pci7415v_driver(core.interface_driver):
 
     def _select_axis_for_command(self, axis):
         axis_num = 0b00000000
-        axis_dic = {'x': 0b00000001, 'X': 0b00000001,
-                    'y': 0b00000010, 'Y': 0b00000010,
-                    'z': 0b00000100, 'Z': 0b00000100,
-                    'u': 0b00001000, 'U': 0b00001000}
-        for i in range(len(axis)):
-            axis_num |= axis_dic[axis[i]]
+        axis_dict = {
+            'x': 0b00000001, 'y': 0b00000010,
+            'z': 0b00000100, 'u': 0b00001000,
+        }
+        for i in axis.lower():
+            axis_num |= axis_dict[i]
         return axis_num
 
     def _make_offset_list(self, offset, axis):
-        axis_dic = {'x': 0x00, 'y': 0x08, 'z': 0x10, 'u': 0x18,
-                    'X': 0x00, 'Y': 0x08, 'Z': 0x10, 'U': 0x18}
-        axis_li = []
-        for i in range(len(axis)):
-            axis_li.append(offset + axis_dic[axis[i]])
-        return axis_li
+        axis_dict = {'x': 0x00, 'y': 0x08, 'z': 0x10, 'u': 0x18,}
+        axis_list = [offset + axis_dict[i] for i in axis.lower()]
+        return axis_list
 
     def _pcl_write_command(self, cmd, axis):
         bar = 1
@@ -471,91 +450,82 @@ class pci7415v_driver(core.interface_driver):
     def _pcl_write_data(self, data, axis):
         bar = 1
         offset = 0x04
-        offset_li = self._make_offset_list(offset, axis)
-        for i in range(len(axis)):
-            self.write(bar, offset_li[i], data[i])
+        offset_list = self._make_offset_list(offset, axis)
+        for _o, _d in zip(offset_list, data):
+            self.write(bar, _o, _d)
         return
 
     def _pcl_read_data(self, axis):
         bar = 1
         offset = 0x04
-        offset_li = self._make_offset_list(offset, axis)
         size = 4
-        data_li = []
-        for i in range(len(axis)):
-            data_li.append(self.read(bar, offset_li[i], size))
-        return data_li
+        offset_list = self._make_offset_list(offset, axis)
+        data_list = [self.read(bar, _o, size) for _o in offset_list]
+        return data_list
 
     def set_param(self, data, name, axis):
-        comb0 = self.cmd_dic['write'][name]['cmd']
-        data = self.cmd_dic['write'][name]['func'](data)
+        comb0 = self.cmd_dict['write'][name]['cmd']
+        data = self.cmd_dict['write'][name]['func'](data)
         self._pcl_write_data(data, axis)
         self._pcl_write_command(comb0, axis)
         return
 
     def get_param(self, name, axis):
-        comb0 = self.cmd_dic['read'][name]['cmd']
+        comb0 = self.cmd_dict['read'][name]['cmd']
         self._pcl_write_command(comb0, axis)
         data_flag = self._pcl_read_data(axis)
-        data = self.cmd_dic['read'][name]['func'](data_flag)
+        data = self.cmd_dict['read'][name]['func'](data_flag)
         return data
 
     def send_cmd(self, name, axis):
-        comb0 = self.cmd_dic['send'][name]['cmd']
+        comb0 = self.cmd_dict['send'][name]['cmd']
         self._pcl_write_command(comb0, axis)
         return
 
     def get_main_status(self, axis):
         bar = 1
         offset = 0x00
-        offset_li = self._make_offset_list(offset, axis)
         size = 2
-        status_li = []
-        for i in range(len(axis)):
-            status = self.read(bar, offset_li[i], size)
-            status_li.append(status.to_bit())
+        offset_list = self._make_offset_list(offset, axis)
+        status_list = []
+        for i in offset_list:
+            status_list.append(self.read(bar, i, size).to_bit())
             time.sleep(0.01)
-        return status_li
+        return status_list
 
     def check_move_onoff(self, axis):
-        status_li = self.get_main_status(axis=axis)
-        move_onoff_list = []
-        for i in range(len(axis)):
-            move_onoff_list.append(int(status_li[i][0]))
+        status_list = self.get_main_status(axis=axis)
+        move_onoff_list = [int(i[0]) for i in status_list]
         return move_onoff_list
 
     def get_operate_condition(self, axis):
         data = self._get_extended_status(axis)
-        for i in range(len(data)):
-            data[i] = data[i][0:4][::-1]
+        data = [i = i[0:4][::-1] for i in data]
         return data
 
     def _get_onoff_axis(self, axis, onoff):
         _onoff = self.check_move_onoff(axis=axis)
         onoff_axis = ''
-        for i in range(len(axis)):
-            if _onoff[i] == onoff: onoff_axis = onoff_axis + axis[i]
+        for i, j in zip(_onoff, axis):
+            if i == onoff:
+                onoff_axis += j
             else: pass
         return onoff_axis
 
     def _get_extended_status(self, axis):
         data = self.get_param(name='rsts', axis=axis)
-        for i in range(len(axis)):
-            data[i] = data[i].to_bit()
+        data = [i = i.to_bit() for i in data]
         return data
 
     def _dict2list(self, axis, move_mode, param):
-        data_li = []
-        [data_li.append(self.motion_conf[move_mode][i][param]) for i in axis]
-        return data_li
+        data_list = [self.motion_conf[move_mode][i][param] for i in axis]
+        return data_list
 
-    def _list2dict(self, axis, data_li):
-        data_dic = {}
-        j = 0
-        for i in axis:
-            data_dic[i] = data_li[j]
-            j += 1
-        return data_dic
+    def _list2dict(self, axis, data_list):
+        data_dict = {}
+        for i, j in zip(axis, data_list):
+            data_dict[i] = j
+        return data_dict
 
 
     ###=== for gpg7400 ===###
@@ -610,14 +580,7 @@ class pci7415v_driver(core.interface_driver):
                 prmd.append(self.move_mode[move_mode])
             if self.motion_conf[move_mode][i]['acc_mode'] == 'acc_sin':
                 prmd.append(self.move_mode[move_mode]|0x04)
-        self._start_motion(axis=axis, prmd=prmd, move_mode=move_mode)
-        if start_mode == 'acc': self.send_cmd(name='staud', axis=axis)
-        if start_mode == 'const': self.send_cmd(name='stafh', axis=axis)
-        if start_mode == 'const_dec': self.send_cmd(name='stad', axis=axis)
-        return
 
-
-    def _start_motion(self, axis, prmd, move_mode):
         self.set_param(self._dict2list(axis, move_mode, 'clock'), 'rmg', axis)
         self.set_param(prmd, 'prmd', axis)
         self.set_param(self._dict2list(axis, move_mode, 'low_speed'), 'rfl', axis)
@@ -625,6 +588,10 @@ class pci7415v_driver(core.interface_driver):
         self.set_param(self._dict2list(axis, move_mode, 'acc'), 'rur', axis)
         self.set_param(self._dict2list(axis, move_mode, 'dec'), 'rdr', axis)
         self.set_param(self._dict2list(axis, move_mode, 'step'), 'rmv', axis)
+
+        if start_mode == 'acc': self.send_cmd(name='staud', axis=axis)
+        if start_mode == 'const': self.send_cmd(name='stafh', axis=axis)
+        if start_mode == 'const_dec': self.send_cmd(name='stad', axis=axis)
         return
 
 
