@@ -700,7 +700,7 @@ class pci7415v_driver(core.interface_driver):
 
     def _get_extended_status(self, axis):
         data = self.get_param(name='rsts', axis=axis)
-        data = [i = i.to_bit() for i in data]
+        data = [i.to_bit() for i in data]
         return data
 
 
