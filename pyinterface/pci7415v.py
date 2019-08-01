@@ -686,7 +686,7 @@ class pci7415v_driver(core.interface_driver):
 
     def get_operate_condition(self, axis):
         data = self._get_extended_status(axis)
-        data = [i = i[0:4][::-1] for i in data]
+        data = [i[0:4][::-1] for i in data]
         return data
 
     def _get_onoff_axis(self, axis, onoff):
