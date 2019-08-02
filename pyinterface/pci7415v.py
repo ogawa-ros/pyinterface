@@ -230,13 +230,20 @@ class pci7415v_driver(core.interface_driver):
             'rspd':  {'cmd': 0xF5, 'func': from_byte_format},
         },
         'send': {
-            'fchgl': {'cmd': 0x40}, 'fchgh': {'cmd': 0x41},
-            'fschl': {'cmd': 0x42}, 'fschh': {'cmd': 0x43},
-            'stop': {'cmd': 0x49}, 'sdstp': {'cmd': 0x4a},
-            'stafl': {'cmd': 0x50}, 'stafh': {'cmd': 0x51},
-            'stad': {'cmd': 0x52}, 'staud': {'cmd': 0x53},
-            'cntfl': {'cmd': 0x54}, 'cntfh': {'cmd': 0x55},
-            'cntd': {'cmd': 0x56}, 'cntud': {'cmd': 0x57},
+            'fchgl': {'cmd': 0x40},
+            'fchgh': {'cmd': 0x41},
+            'fschl': {'cmd': 0x42},
+            'fschh': {'cmd': 0x43},
+            'stop': {'cmd': 0x49},
+            'sdstp': {'cmd': 0x4a},
+            'stafl': {'cmd': 0x50},
+            'stafh': {'cmd': 0x51},
+            'stad': {'cmd': 0x52},
+            'staud': {'cmd': 0x53},
+            'cntfl': {'cmd': 0x54},
+            'cntfh': {'cmd': 0x55},
+            'cntd': {'cmd': 0x56},
+            'cntud': {'cmd': 0x57},
             'srst': {'cmd': 0x04},
         },
     }
@@ -253,348 +260,70 @@ class pci7415v_driver(core.interface_driver):
         'ptp_repeat': None,
     }
 
+    _motion_conf_default = {
+        'clock': 0,
+        'acc_mode': '',
+        'low_speed': 0,
+        'speed': 0,
+        'acc': 0,
+        'dec': 0,
+        'step': 0,
+    }
+
     motion_conf = {
         'jog': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'org': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'ptp': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'timer': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'single_step': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'org_search': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'org_exit': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'org_zero': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
         'ptp_repeat': {
-            'x': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'y': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'z': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
-            'u': {
-                'clock':  0,
-                'acc_mode': '',
-                'low_speed': 0,
-                'speed': 0,
-                'acc': 0,
-                'dec': 0,
-                'step': 0,
-            },
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
         },
     }
 
@@ -610,8 +339,10 @@ class pci7415v_driver(core.interface_driver):
     def _select_axis_for_command(self, axis):
         axis_num = 0b00000000
         axis_dict = {
-            'x': 0b00000001, 'y': 0b00000010,
-            'z': 0b00000100, 'u': 0b00001000,
+            'x': 0b00000001,
+            'y': 0b00000010,
+            'z': 0b00000100,
+            'u': 0b00001000,
         }
         for i in axis.lower():
             axis_num |= axis_dict[i]
@@ -706,7 +437,6 @@ class pci7415v_driver(core.interface_driver):
 
     ###=== for gpg7400 ===###
 
-
     def initialize(self, axis='xyzu'):
         self.send_cmd(name='srst', axis=axis)
         time.sleep(0.1)
@@ -717,14 +447,12 @@ class pci7415v_driver(core.interface_driver):
         if mode == 'reset_ctrl':
             self.send_cmd(name='stop', axis='xyzu')
             self.send_cmd(name='srst', axis='xyzu')
-        if mode == 'reset_motion':
+
+        elif mode == 'reset_motion':
             self.send_cmd(name='stop', axis='xyzu')
-            for i in self.motion_conf:
-                for j in self.motion_conf[i]:
-                    self.motion_conf[i][j] = {
-                        'clock':  0, 'acc_mode': '', 'low_speed': 0,
-                        'speed': 0, 'acc': 0, 'dec': 0, 'step': 0
-                    }
+            for i in self.motion_conf.values():
+                for j in i: i[j] = _motion_conf_default.copy()
+
             data = [0]*len(axis)
             self.set_param(data=data, name='prmv', axis=axis)
             self.set_param(data=data, name='prfl', axis=axis)
@@ -732,20 +460,18 @@ class pci7415v_driver(core.interface_driver):
             self.set_param(data=data, name='prur', axis=axis)
             self.set_param(data=data, name='prdr', axis=axis)
             self.set_param(data=data, name='prmg', axis=axis)
-            return
+
+        else: pass
+        return
 
 
     def set_motion(self, axis, mode, motion):
-        for i in axis:
-            for j in motion[i]:
-                self.motion_conf[mode][i][j] = motion[i][j]
+        for i in axis: self.motion_conf[mode][i] = motion[i].copy()
         return
 
 
     def get_motion(self, axis, mode):
-        motion = {}
-        for i in axis:
-            motion[i] = self.motion_conf[mode][i]
+        motion = {i: self.motion_conf[mode][i].copy() for i in axis}
         return motion
 
 
@@ -754,8 +480,11 @@ class pci7415v_driver(core.interface_driver):
         for i in axis:
             if self.motion_conf[move_mode][i]['acc_mode'] == 'acc_normal':
                 prmd.append(self.move_mode[move_mode])
-            if self.motion_conf[move_mode][i]['acc_mode'] == 'acc_sin':
+
+            elif self.motion_conf[move_mode][i]['acc_mode'] == 'acc_sin':
                 prmd.append(self.move_mode[move_mode]|0x04)
+
+            else: pass
 
         conf = self.motion_conf[move_mode]
         self.set_param([conf[i]['clock'] for i in axis], 'rmg', axis)
@@ -767,22 +496,27 @@ class pci7415v_driver(core.interface_driver):
         self.set_param([conf[i]['step'] for i in axis], 'rmv', axis)
 
         if start_mode == 'acc': self.send_cmd(name='staud', axis=axis)
-        if start_mode == 'const': self.send_cmd(name='stafh', axis=axis)
-        if start_mode == 'const_dec': self.send_cmd(name='stad', axis=axis)
+        elif start_mode == 'const': self.send_cmd(name='stafh', axis=axis)
+        elif start_mode == 'const_dec': self.send_cmd(name='stad', axis=axis)
+        else: pass
         return
 
 
     def stop_motion(self, axis, stop_mode):
         if stop_mode == 'dec_stop':
             self.send_cmd(name='sdstp', axis=axis)
-        if stop_mode == 'immediate_stop':
+
+        elif stop_mode == 'immediate_stop':
             self.send_cmd(name='stop', axis=axis)
+
+        else: pass
         return
 
 
     def change_speed(self, axis, mode, speed):
         if mode == 'accdec_change':
             self.set_param(name='rfh', data=speed, axis=axis)
+        else: pass
         return
 
 
@@ -799,12 +533,14 @@ class pci7415v_driver(core.interface_driver):
     def read_counter(self, axis, cnt_mode):
         if cnt_mode == 'counter':
             data = self.get_param(name='rcun1', axis=axis)
+        else: data = None
         return data
 
 
     def write_counter(self, axis, cnt_mode, counter):
         if cnt_mode == 'counter':
             self.set_param(name='rcun1', data=counter, axis=axis)
+        else: pass
         return
 
 
