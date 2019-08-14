@@ -181,6 +181,7 @@ class pci7415v_driver(core.interface_driver):
             'rip': {'cmd': 0x98, 'func': to_prip_format},
             'rus': {'cmd': 0x99, 'func': to_byte_format},
             'rds': {'cmd': 0x9A, 'func': to_byte_format},
+            'renv1': {'cmd': 0x9C, 'func': None},
             'prmv': {'cmd': 0x80, 'func': to_comp28_format},
             'prfl': {'cmd': 0x81, 'func': to_byte_format},
             'prfh': {'cmd': 0x82, 'func': to_byte_format},
@@ -206,6 +207,7 @@ class pci7415v_driver(core.interface_driver):
             'rip': {'cmd': 0xD8},
             'rus': {'cmd': 0xD9},
             'rds': {'cmd': 0xDA},
+            'renv1': {'cmd': 0x9C},
             'prmv': {'cmd': 0xC0, 'func': from_comp28_format},
             'prfl': {'cmd': 0xC1, 'func': from_byte_format},
             'prfh': {'cmd': 0xC2, 'func': from_byte_format},
@@ -247,6 +249,17 @@ class pci7415v_driver(core.interface_driver):
             'srst': {'cmd': 0x04},
         },
     }
+
+    pulse_specific = {
+        'pulse_dir1': 0x00,
+        'pulse_dir2': 0x02,
+        'pulse_dir3': 0x04,
+        'pulse_dir4': 0x06,
+        'two_pulse1': 0x01,
+        'two_pulse2': 0x07,
+        'phase_dif1': 0x03,
+        'phase_dif2': 0x05,
+        }
 
     move_mode = {
         'jog': 0x00,
@@ -368,8 +381,7 @@ class pci7415v_driver(core.interface_driver):
         bar = 1
         offset = 0x04
         offset_list = self._make_offset_list(offset, axis)
-        for _o, _d in zip(offset_list, data):
-            self.write(bar, _o, _d)
+        [self.write(bar, _o, _d) for _o, _d in zip(offset_list, data)]
         return
 
     def _pcl_read_data(self, axis):
@@ -465,8 +477,20 @@ class pci7415v_driver(core.interface_driver):
         return
 
 
+    def set_pulse_out(self, axis, mode, config):
+        renv1 = []
+        for i in axis:
+            if mode == 'method':
+                renv1.append(self.pulse_specific[config]|0x00)
+
+            else: pass
+
+        self.set_param(renv1, 'renv1', axis)
+        return
+
+
     def set_motion(self, axis, mode, motion):
-        for i in axis: self.motion_conf[mode][i] = motion[i].copy()
+        [self.motion_conf[mode][i] = motion[i].copy() for i in axis]
         return
 
 
@@ -486,14 +510,15 @@ class pci7415v_driver(core.interface_driver):
 
             else: pass
 
-        conf = self.motion_conf[move_mode]
-        self.set_param([conf[i]['clock'] for i in axis], 'rmg', axis)
         self.set_param(prmd, 'prmd', axis)
-        self.set_param([conf[i]['low_speed'] for i in axis], 'rfl', axis)
-        self.set_param([conf[i]['speed'] for i in axis], 'rfh', axis)
-        self.set_param([conf[i]['acc'] for i in axis], 'rur', axis)
-        self.set_param([conf[i]['dec'] for i in axis], 'rdr', axis)
-        self.set_param([conf[i]['step'] for i in axis], 'rmv', axis)
+
+        conf = self.motion_conf[move_mode]
+        self.set_param([conf[i]['clock'] for i in axis], 'prmg', axis)
+        self.set_param([conf[i]['low_speed'] for i in axis], 'prfl', axis)
+        self.set_param([conf[i]['speed'] for i in axis], 'prfh', axis)
+        self.set_param([conf[i]['acc'] for i in axis], 'prur', axis)
+        self.set_param([conf[i]['dec'] for i in axis], 'prdr', axis)
+        self.set_param([conf[i]['step'] for i in axis], 'prmv', axis)
 
         if start_mode == 'acc': self.send_cmd(name='staud', axis=axis)
         elif start_mode == 'const': self.send_cmd(name='stafh', axis=axis)

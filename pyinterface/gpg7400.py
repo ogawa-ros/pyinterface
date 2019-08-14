@@ -69,6 +69,30 @@ class gpg7400(object):
         return
 
 
+    def set_pulse_out(self, axis, mode, config):
+        """パルス出力の各種設定を行います。
+        (GPG-7400 4. MtnSetPulseOut)
+
+        Parameters
+        ----------
+        ...
+
+        Returns
+        -------
+        ...
+
+        Examples
+        --------
+        ...
+
+        Exceptions
+        ----------
+        ...
+        """
+        self.driver.set_pulse_out(self, axis, mode, config)
+        pass
+
+
     def set_motion(self, axis, mode, motion):
         """各軸に独立動作パラメータを設定します。
         (GPG-7400 11. MtnSetMotion)
