@@ -1,6 +1,6 @@
 
 
-__version__ = '1.5.5'
+__version__ = '1.5.6'
 
 interface_vendor_id = 0x1147
 
@@ -8,5 +8,5 @@ try:
     from .tools import open
     from .tools import lspci
     from .core import interface_driver
-except:
+except ModuleNotFoundError:
     pass

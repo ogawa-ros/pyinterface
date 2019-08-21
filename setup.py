@@ -19,6 +19,7 @@ setuptools.setup(
     install_requires = [
         'portio',
         'pypci',
+        'psutil',
     ],
     classifiers=[
         'Operating System :: POSIX :: Linux',
