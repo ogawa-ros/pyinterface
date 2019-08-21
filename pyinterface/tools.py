@@ -64,7 +64,7 @@ def open7204(pci_config_header):
     return gpg7204.gpg7204(driver)
 
 def open7415(pci_config_header):
-    driver = pci7415.pci7415_driver(pci_config_header)
+    driver = pci7415v.pci7415v_driver(pci_config_header)
     return gpg7400.gpg7400(driver)
 
 
@@ -86,17 +86,17 @@ open_func = {
 
 
 
-def open(board_name, board_id):    
+def open(board_name, board_id):
     if type(board_id) == int:
         board_id = format(board_id, '1X')
         pass
-    
+
     pci_config_headers = pypci.lspci(interface_vendor_id, board_name)
-    
+
     if pci_config_headers == []:
         msg = 'board_id {0} is not found'.format(board_name)
         raise TypeError(msg)
-    
+
     for conf in pci_config_headers:
         b = open_func[board_name](conf)
         if b.board_id == board_id:
@@ -107,18 +107,18 @@ def open(board_name, board_id):
 
 def lspci():
     pci_config_headers = pypci.lspci(interface_vendor_id)
-    
+
     if pci_config_headers == []:
         msg = 'board_id {0} is not found'.format(board_name)
         raise TypeError(msg)
-    
+
     board_list = []
     for conf in lpci_config_headers:
         board_name = conf.device_id
         b = open_func[board_name](conf)
         board_list.append({'name': board_name, 'rsw': b.board_id})
         continue
-        
+
     for b in sorted(board_list, key=lambda x: x['name']):
         print('%s : RSW=%s'%(b['name'], b['rsw']))
         continue
