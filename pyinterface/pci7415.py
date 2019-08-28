@@ -341,6 +341,7 @@ class pci7415_driver(core.interface_driver):
     }
 
     last_param = {
+        'prmd': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
         'prmv': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
         'prfl': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
         'prfh': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
