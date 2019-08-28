@@ -181,7 +181,7 @@ class pci7415_driver(core.interface_driver):
             'rip': {'cmd': 0x98, 'func': to_prip_format},
             'rus': {'cmd': 0x99, 'func': to_byte_format},
             'rds': {'cmd': 0x9A, 'func': to_byte_format},
-            'renv1': {'cmd': 0x9C, 'func': None},
+            'renv1': {'cmd': 0x9C, 'func': to_byte_format},
             'prmv': {'cmd': 0x80, 'func': to_comp28_format},
             'prfl': {'cmd': 0x81, 'func': to_byte_format},
             'prfh': {'cmd': 0x82, 'func': to_byte_format},
