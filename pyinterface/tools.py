@@ -18,7 +18,7 @@ from . import pci340816
 from . import pci340516
 from . import pci6204
 from . import pci7204
-from . import pci7415v
+from . import pci7415
 
 interface_vendor_id = 0x1147
 

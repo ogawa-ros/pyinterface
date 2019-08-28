@@ -57,7 +57,7 @@ def do_nothing(x):
     return x
 
 
-class pci7415v_driver(core.interface_driver):
+class pci7415_driver(core.interface_driver):
     bit_flags_in = (
         (
             ('TD1', 'TD2', 'TD3', 'TD4', '', '', '', ''),
@@ -340,6 +340,14 @@ class pci7415v_driver(core.interface_driver):
         },
     }
 
+    last_param = {
+        'prmv': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
+        'prfl': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
+        'prfh': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
+        'prur': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
+        'prdr': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
+        'prmg': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
+    }
 
     def get_board_id(self):
         bar = 0
@@ -392,11 +400,27 @@ class pci7415v_driver(core.interface_driver):
         data_list = [self.read(bar, _o, size) for _o in offset_list]
         return data_list
 
+    def _check_last_param(self, data, name, axis):
+        _d = []
+        _ax = ''
+        for i, j in zip(data, axis):
+            if i != self.last_param[name][j]:
+                _d.append(i)
+                _ax += j
+        ret = [_d, _ax]
+        return ret
+
     def set_param(self, data, name, axis):
-        comb0 = self.cmd_dict['write'][name]['cmd']
-        data = self.cmd_dict['write'][name]['func'](data)
-        self._pcl_write_data(data, axis)
-        self._pcl_write_command(comb0, axis)
+        data_axis_list = self._check_last_param(data, name, axis)
+        data = data_axis_list[0]
+        axis = data_axis_list[1]
+        if data != []:
+            comb0 = self.cmd_dict['write'][name]['cmd']
+            data = self.cmd_dict['write'][name]['func'](data)
+            self._pcl_write_data(data, axis)
+            self._pcl_write_command(comb0, axis)
+            self.last_param[name] = data
+        else: pass
         return
 
     def get_param(self, name, axis):
@@ -482,7 +506,6 @@ class pci7415v_driver(core.interface_driver):
         for i in axis:
             if mode == 'method':
                 renv1.append(self.pulse_specific[config]|0x00)
-
             else: pass
 
         self.set_param(renv1, 'renv1', axis)
@@ -504,14 +527,11 @@ class pci7415v_driver(core.interface_driver):
         for i in axis:
             if self.motion_conf[move_mode][i]['acc_mode'] == 'acc_normal':
                 prmd.append(self.move_mode[move_mode])
-
             elif self.motion_conf[move_mode][i]['acc_mode'] == 'acc_sin':
                 prmd.append(self.move_mode[move_mode]|0x04)
-
             else: pass
 
         self.set_param(prmd, 'prmd', axis)
-
         conf = self.motion_conf[move_mode]
         self.set_param([conf[i]['clock'] for i in axis], 'prmg', axis)
         self.set_param([conf[i]['low_speed'] for i in axis], 'prfl', axis)
