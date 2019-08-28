@@ -64,7 +64,7 @@ def open7204(pci_config_header):
     return gpg7204.gpg7204(driver)
 
 def open7415(pci_config_header):
-    driver = pci7415v.pci7415v_driver(pci_config_header)
+    driver = pci7415.pci7415_driver(pci_config_header)
     return gpg7400.gpg7400(driver)
 
 
