@@ -407,6 +407,7 @@ class pci7415_driver(core.interface_driver):
             if i != self.last_param[name][j]:
                 _d.append(i)
                 _ax += j
+                self.last_param[name][j] = i
         ret = [_d, _ax]
         return ret
 
@@ -419,7 +420,6 @@ class pci7415_driver(core.interface_driver):
             data = self.cmd_dict['write'][name]['func'](data)
             self._pcl_write_data(data, axis)
             self._pcl_write_command(comb0, axis)
-            self.last_param[name] = data
         else: pass
         return
 
