@@ -498,7 +498,7 @@ class pci7415_driver(core.interface_driver):
             self.set_param(data=data, name='prdr', axis=axis)
         self.set_param(data=data, name='prmg', axis=axis)
 
-    else: pass
+        else: pass
     return
 
 
