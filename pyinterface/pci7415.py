@@ -340,15 +340,7 @@ class pci7415_driver(core.interface_driver):
         },
     }
 
-    last_param = {
-        'prmd': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
-        'prmv': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
-        'prfl': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
-        'prfh': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
-        'prur': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
-        'prdr': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
-        'prmg': {'x': 0, 'y': 0, 'z': 0, 'u': 0},
-    }
+    last_param = {}
 
     def get_board_id(self):
         bar = 0
@@ -402,6 +394,8 @@ class pci7415_driver(core.interface_driver):
         return data_list
 
     def _check_last_param(self, data, name, axis):
+        if name in self.last_param: pass
+        else: self.last_param[name] = {'x': 0, 'y': 0, 'z': 0, 'u': 0}
         _d = []
         _ax = ''
         for i, j in zip(data, axis):
