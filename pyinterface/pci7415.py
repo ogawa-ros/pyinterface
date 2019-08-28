@@ -496,14 +496,14 @@ class pci7415_driver(core.interface_driver):
             self.set_param(data=data, name='prfh', axis=axis)
             self.set_param(data=data, name='prur', axis=axis)
             self.set_param(data=data, name='prdr', axis=axis)
-        self.set_param(data=data, name='prmg', axis=axis)
+            self.set_param(data=data, name='prmg', axis=axis)
 
         else: pass
-    return
+        return
 
 
-def set_pulse_out(self, axis, mode, config):
-    renv1 = []
+    def set_pulse_out(self, axis, mode, config):
+        renv1 = []
         if mode == 'method':
             for i, j in zip(axis, config):
                 _con = j['DUTY'] + j['WAIT'] + j['DIR'] + j['OUT'] + j['PULSE']
