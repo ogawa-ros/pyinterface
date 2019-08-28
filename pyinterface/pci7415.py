@@ -340,7 +340,7 @@ class pci7415_driver(core.interface_driver):
         },
     }
 
-    last_param = {}
+    _last_param = {}
 
     def get_board_id(self):
         bar = 0
@@ -394,15 +394,22 @@ class pci7415_driver(core.interface_driver):
         return data_list
 
     def _check_last_param(self, data, name, axis):
-        if name in self.last_param: pass
-        else: self.last_param[name] = {'x': 0, 'y': 0, 'z': 0, 'u': 0}
+        if name in self._last_param:
+            pass
+        else:
+            self._last_param[name] = {
+                'x': None,
+                'y': None,
+                'z': None,
+                'u': None,
+            }
         _d = []
         _ax = ''
         for i, j in zip(data, axis):
-            if i != self.last_param[name][j]:
+            if i != self._last_param[name][j]:
                 _d.append(i)
                 _ax += j
-                self.last_param[name][j] = i
+                self._last_param[name][j] = i
         ret = [_d, _ax]
         return ret
 
@@ -478,7 +485,6 @@ class pci7415_driver(core.interface_driver):
         if mode == 'reset_ctrl':
             self.send_cmd(name='stop', axis='xyzu')
             self.send_cmd(name='srst', axis='xyzu')
-
         elif mode == 'reset_motion':
             self.send_cmd(name='stop', axis='xyzu')
             for i in self.motion_conf.values():
@@ -498,9 +504,10 @@ class pci7415_driver(core.interface_driver):
 
     def set_pulse_out(self, axis, mode, config):
         renv1 = []
-        for i in axis:
+        for i, j in zip(axis, config):
             if mode == 'method':
-                renv1.append(self.pulse_specific[config]|0x00)
+                _con = j['DUTY'] + j['WAIT'] + j['DIR'] + j['OUT'] + j['PULSE']
+                renv1.append(int(_con, 2))
             else: pass
 
         self.set_param(renv1, 'renv1', axis)
@@ -546,10 +553,8 @@ class pci7415_driver(core.interface_driver):
     def stop_motion(self, axis, stop_mode):
         if stop_mode == 'dec_stop':
             self.send_cmd(name='sdstp', axis=axis)
-
         elif stop_mode == 'immediate_stop':
             self.send_cmd(name='stop', axis=axis)
-
         else: pass
         return
 
