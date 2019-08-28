@@ -89,7 +89,7 @@ class gpg7400(object):
         ----------
         ...
         """
-        self.driver.set_pulse_out(self, axis, mode, config)
+        self.driver.set_pulse_out(axis, mode, config)
         pass
 
 
