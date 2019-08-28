@@ -11,43 +11,21 @@
 
 class gpg7400(object):
 
+    _motion_default = {
+        'clock':  0,
+        'acc_mode': '',
+        'low_speed': 0,
+        'speed': 0,
+        'acc': 0,
+        'dec': 0,
+        'step': 0
+    }
+
     motion = {
-        'x': {
-            'clock':  0,
-            'acc_mode': '',
-            'low_speed': 0,
-            'speed': 0,
-            'acc': 0,
-            'dec': 0,
-            'step': 0
-        },
-        'y': {
-            'clock':  0,
-            'acc_mode': '',
-            'low_speed': 0,
-            'speed': 0,
-            'acc': 0,
-            'dec': 0,
-            'step': 0
-        },
-        'z': {
-            'clock':  0,
-            'acc_mode': '',
-            'low_speed': 0,
-            'speed': 0,
-            'acc': 0,
-            'dec': 0,
-            'step': 0
-        },
-        'u': {
-            'clock':  0,
-            'acc_mode': '',
-            'low_speed': 0,
-            'speed': 0,
-            'acc': 0,
-            'dec': 0,
-            'step': 0
-        }
+        'x': _motion_default.copy(),
+        'y': _motion_default.copy(),
+        'z': _motion_default.copy(),
+        'u': _motion_default.copy(),
     }
 
     def __init__(self, driver):
@@ -89,6 +67,30 @@ class gpg7400(object):
         """
         self.driver.reset(axis, mode)
         return
+
+
+    def set_pulse_out(self, axis, mode, config):
+        """パルス出力の各種設定を行います。
+        (GPG-7400 4. MtnSetPulseOut)
+
+        Parameters
+        ----------
+        ...
+
+        Returns
+        -------
+        ...
+
+        Examples
+        --------
+        ...
+
+        Exceptions
+        ----------
+        ...
+        """
+        self.driver.set_pulse_out(self, axis, mode, config)
+        pass
 
 
     def set_motion(self, axis, mode, motion):
