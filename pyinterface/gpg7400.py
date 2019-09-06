@@ -11,23 +11,6 @@
 
 class gpg7400(object):
 
-    _motion_default = {
-        'clock':  0,
-        'acc_mode': '',
-        'low_speed': 0,
-        'speed': 0,
-        'acc': 0,
-        'dec': 0,
-        'step': 0
-    }
-
-    motion = {
-        'x': _motion_default.copy(),
-        'y': _motion_default.copy(),
-        'z': _motion_default.copy(),
-        'u': _motion_default.copy(),
-    }
-
     def __init__(self, driver):
         self.driver = driver
         self.board_id = driver.board_id
@@ -99,6 +82,45 @@ class gpg7400(object):
 
         Parameters
         ----------
+        motion:
+            motion = {
+                'x': {
+                    'clock' = 299,
+                    'acc_mode':  'acc_normal',
+                    'low_speed: 10000,
+                    'speed': 50000,
+                    'acc': 5000,
+                    'dec': 5000,
+                    'step': 1,
+                },
+                'y': {
+                    'clock' = 299,
+                    'acc_mode':  'acc_normal',
+                    'low_speed: 10000,
+                    'speed': 50000,
+                    'acc': 5000,
+                    'dec': 5000,
+                    'step': 1,
+                },
+                'z': {
+                    'clock' = 299,
+                    'acc_mode':  'acc_normal',
+                    'low_speed: 10000,
+                    'speed': 50000,
+                    'acc': 5000,
+                    'dec': 5000,
+                    'step': 1,
+                },
+                'u': {
+                    'clock' = 299,
+                    'acc_mode':  'acc_normal',
+                    'low_speed: 10000,
+                    'speed': 50000,
+                    'acc': 5000,
+                    'dec': 5000,
+                    'step': 1,
+                },
+            }
         ...
 
         Returns
