@@ -477,6 +477,7 @@ class pci7415_driver(core.interface_driver):
 
     def initialize(self, axis='xyzu'):
         self.send_cmd(name='srst', axis=axis)
+        self._last_param = {}
         time.sleep(0.1)
         return
 
