@@ -262,7 +262,7 @@ class pci7415_driver(core.interface_driver):
         }
 
     move_mode = {
-        'jog': 0x02,
+        'jog': 0x01,
         'org': None,
         'ptp': 0x42,
         'timer': None,
