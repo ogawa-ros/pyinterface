@@ -285,7 +285,13 @@ class pci7415_driver(core.interface_driver):
     }
 
     motion_conf = {
-        'jog': {
+        '+jog': {
+            'x': _motion_conf_default.copy(),
+            'y': _motion_conf_default.copy(),
+            'z': _motion_conf_default.copy(),
+            'u': _motion_conf_default.copy(),
+        },
+        '-jog': {
             'x': _motion_conf_default.copy(),
             'y': _motion_conf_default.copy(),
             'z': _motion_conf_default.copy(),
