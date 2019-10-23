@@ -262,8 +262,7 @@ class pci7415_driver(core.interface_driver):
         }
 
     move_mode = {
-        '+jog': 0x00,
-        '-jog': 0x08,
+        'jog': None,
         'org': None,
         'ptp': 0x42,
         'timer': None,
@@ -285,13 +284,7 @@ class pci7415_driver(core.interface_driver):
     }
 
     motion_conf = {
-        '+jog': {
-            'x': _motion_conf_default.copy(),
-            'y': _motion_conf_default.copy(),
-            'z': _motion_conf_default.copy(),
-            'u': _motion_conf_default.copy(),
-        },
-        '-jog': {
+        'jog': {
             'x': _motion_conf_default.copy(),
             'y': _motion_conf_default.copy(),
             'z': _motion_conf_default.copy(),
@@ -536,10 +529,18 @@ class pci7415_driver(core.interface_driver):
     def start_motion(self, axis, start_mode, move_mode):
         prmd = []
         for i in axis:
+            if move_mode == 'jog':
+                if self.motion_conf[move_mode][i]['step'] == 1:
+                    _move_mode = 0x00
+                if self.motion_conf[move_mode][i]['step'] == -1:
+                    _move_mode = 0x08
+            else:
+                _move_mode = self.move_mode[move_mode]
+
             if self.motion_conf[move_mode][i]['acc_mode'] == 'acc_normal':
-                prmd.append(self.move_mode[move_mode])
+                prmd.append(_move_mode)
             elif self.motion_conf[move_mode][i]['acc_mode'] == 'acc_sin':
-                prmd.append(self.move_mode[move_mode]|0x04)
+                prmd.append(_move_mode|0x04)
             else: pass
 
         self.set_param(prmd, 'prmd', axis)
