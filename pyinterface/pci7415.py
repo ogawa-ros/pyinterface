@@ -405,6 +405,7 @@ class pci7415_driver(core.interface_driver):
             }
         _d = []
         _ax = ''
+        axis = [i for i in axis]
         for i, j in zip(data, axis):
             if i != self._last_param[name][j]:
                 _d.append(i)
