@@ -507,9 +507,9 @@ class pci7415_driver(core.interface_driver):
         renv1 = []
         if mode == 'method':
             for i, j in zip(axis, config):
-                _con = str(abs(j['DUTY'] - 1)) + '00' + j['WAIT']
+                _con = str(abs(j['DUTY'] - 1)) + '00' + str(j['WAIT'])
                 _con += '0000000000000000000000000'
-                _con += j['OUT'] + j['PULSE'] + j['DIR']
+                _con += str(j['OUT']) + str(j['PULSE']) + str(j['DIR'])
                 renv1.append(int(_con, 2))
             else: pass
 
