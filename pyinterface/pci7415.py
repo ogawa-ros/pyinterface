@@ -400,7 +400,7 @@ class pci7415_driver(core.interface_driver):
             self._last_param[name] = {
                 'x': None,
                 'y': None,
-                'z'ne,
+                'z': None,
                 'u': None,
             }
         _d = []
