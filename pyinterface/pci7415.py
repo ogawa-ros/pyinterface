@@ -601,11 +601,14 @@ class pci7415_driver(core.interface_driver):
         return
 
 
-    def output_do(self, do):
+    def output_do(self, do_list):
         bar = 0
         offset = 0x02
-        do = do.to_bytes(2, 'little')
-        self.write(bar, offset, do)
+        do_list.reverse()
+        do_str = ''
+        for do in do_list:
+            do_str += str(do)
+        do_int = int(do_str, 2)
         return
 
 
@@ -614,4 +617,6 @@ class pci7415_driver(core.interface_driver):
         offset = 0x02
         size = 2
         data = self.read(bar, offset, size)
-        return data.to_dictlist()
+        data = data.to_dictlist()
+        ret = [i['value'] for i in data]
+        return ret
