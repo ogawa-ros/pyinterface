@@ -609,6 +609,7 @@ class pci7415_driver(core.interface_driver):
         for do in do_list:
             do_str += str(do)
         do_int = int(do_str, 2)
+        do_int = do_int.to_bytes(2, 'little')
         self.write(bar, offset, do_int)
         return
 
