@@ -509,7 +509,7 @@ class pci7415_driver(core.interface_driver):
             for i, j in zip(axis, config):
                 _con = str(abs(j['DUTY'] - 1)) + '00' + str(j['WAIT'])
                 _con += '0000000000000000000000000'
-                _con += str(j['OUT']) + str(j['PULSE']) + str(j['DIR'])
+                _con += str(j['PULSE']) + str(j['DIR']) + str(j['OUT'])
                 renv1.append(int(_con, 2))
             else: pass
 
@@ -606,11 +606,11 @@ class pci7415_driver(core.interface_driver):
         offset = 0x02
         do_list.reverse()
         do_str = ''
-        for do in do_list:
-            do_str += str(do)
+        for _do in do_list:
+            do_str += str(_do)
         do_int = int(do_str, 2)
-        do_int = do_int.to_bytes(2, 'little')
-        self.write(bar, offset, do_int)
+        do = do_int.to_bytes(2, 'little')
+        self.write(bar, offset, do)
         return
 
 
