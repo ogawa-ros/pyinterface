@@ -519,7 +519,7 @@ class pci7415_driver(core.interface_driver):
 
     def set_motion(self, axis, mode, motion):
         for i in axis:
-            self.motion_conf[mode][i] = motion[i].copy()
+            self.motion_conf[mode[i]][i] = motion[i].copy()
         return
 
 
