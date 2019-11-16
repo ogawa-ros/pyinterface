@@ -548,8 +548,8 @@ class pci7415_driver(core.interface_driver):
         self.set_param(prmd, 'prmd', axis)
         conf = self.motion_conf[move_mode]
         self.set_param([conf[i]['clock'] for i in axis], 'prmg', axis)
-        self.set_param([conf[i]['low_speed'] for i in axis], 'prfl', axis)
-        self.set_param([conf[i]['speed'] for i in axis], 'prfh', axis)
+        self.set_param([round(conf[i]['low_speed']*(conf[i]['clock'] + 1)/300) for i in axis], 'prfl', axis)
+        self.set_param([round(conf[i]['speed']*(conf[i]['clock'] + 1)/300) for i in axis], 'prfh', axis)
         self.set_param([conf[i]['acc'] for i in axis], 'prur', axis)
         self.set_param([conf[i]['dec'] for i in axis], 'prdr', axis)
         self.set_param([conf[i]['step'] for i in axis], 'prmv', axis)
