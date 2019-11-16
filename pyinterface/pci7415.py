@@ -573,7 +573,7 @@ class pci7415_driver(core.interface_driver):
     def change_speed(self, axis, mode, speed):
         if mode == 'accdec_change':
             clock = self.get_param(name='rmg', axis=axis)
-            _speed = [round(i*(j+1)/300) for i, j in (speed, clock)]
+            _speed = [round(i*(j+1)/300) for i, j in zip(speed, clock)]
             self.set_param(name='rfh', data=_speed, axis=axis)
         else: pass
         return
