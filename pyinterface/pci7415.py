@@ -526,13 +526,6 @@ class pci7415_driver(core.interface_driver):
            #self.motion_conf["jog"]["x"] = motion[j].copy()
         return
 
-        'clock': 0,
-        'acc_mode': '',
-        'low_speed': 0,
-        'speed': 0,
-        'acc': 0,
-        'dec': 0,
-        'step': 0,
 
     def get_motion(self, axis, mode):
         motion = {i: self.motion_conf[mode][i].copy() for i in axis}
