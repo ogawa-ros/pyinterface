@@ -584,7 +584,8 @@ class pci7415_driver(core.interface_driver):
 
     def read_speed(self, axis):
         data = self.get_param(name='rspd', axis=axis)
-        return data
+        clock = self.get_param(name='rmg', axis=axis)
+        return data*300/(clock+1)
 
 
     def read_counter(self, axis, cnt_mode):
