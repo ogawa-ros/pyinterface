@@ -395,6 +395,8 @@ class pci7415_driver(core.interface_driver):
         return data_list
 
     def _check_last_param(self, data, name, axis):
+        if name[0] == 'p':
+            name = name[1:]
         if name in self._last_param:
             pass
         else:
