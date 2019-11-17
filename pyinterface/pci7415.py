@@ -232,6 +232,7 @@ class pci7415_driver(core.interface_driver):
             'rspd':  {'cmd': 0xF5, 'func': from_byte_format},
         },
         'send': {
+            'preshf': {'cmd': 0x2b},
             'fchgl': {'cmd': 0x40},
             'fchgh': {'cmd': 0x41},
             'fschl': {'cmd': 0x42},
