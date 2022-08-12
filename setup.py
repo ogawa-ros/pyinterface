@@ -1,9 +1,15 @@
 import setuptools
+from pathlib import Path
+
+
+long_description = (Path(__file__).parent / "README.md").read_text()
 
 setuptools.setup(
     name = 'pyinterface',
-    version = __import__('pyinterface').__version__,
+    version = "1.7.0",
     description = 'driver for Interface PCI board',
+    long_description = long_description,
+    long_description_content_type = "text/markdown",
     url = 'https://github.com/ogawa-ros/pyinterface',
     project_urls = {
         'Documentation': 'https://pyinterface.readthedocs.io/',
@@ -20,6 +26,7 @@ setuptools.setup(
         'portio',
         'pypci',
         'psutil',
+        "importlib-metadata; python_version < '3.8'"
     ],
     classifiers=[
         'Operating System :: POSIX :: Linux',
