@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TWINE_USERNAME: "_token"
-      TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN_INTER }}
     steps:
       - uses: actions/checkout@v3
       - name: Set-up Python
