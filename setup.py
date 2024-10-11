@@ -6,7 +6,7 @@ long_description = (Path(__file__).parent / "README.md").read_text()
 
 setuptools.setup(
     name = 'pyinterface',
-    version = "1.7.4",
+    version = "1.7.5",
     description = 'driver for Interface PCI board',
     long_description = long_description,
     long_description_content_type = "text/markdown",
